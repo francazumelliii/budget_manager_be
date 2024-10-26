@@ -2,6 +2,7 @@ package it.jac.project_work.budget_manager.controller;
 
 
 import it.jac.project_work.budget_manager.dto.AccountInDTO;
+import it.jac.project_work.budget_manager.dto.AuthInDTO;
 import it.jac.project_work.budget_manager.dto.AuthResponseDTO;
 import it.jac.project_work.budget_manager.entity.Account;
 import it.jac.project_work.budget_manager.repository.AccountRepository;
@@ -36,6 +37,10 @@ public class AuthController {
         return this.authService.signup(dto);
 
 
+    }
+    @PostMapping("/login")
+    public AuthResponseDTO login(@RequestBody AuthInDTO dto){
+        return this.authService.login(dto);
     }
 
 
