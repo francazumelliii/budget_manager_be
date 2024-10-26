@@ -3,11 +3,13 @@ package it.jac.project_work.budget_manager.service;
 import com.nimbusds.openid.connect.sdk.assurance.evidences.attachment.HashAlgorithm;
 import it.jac.project_work.budget_manager.dto.AccountInDTO;
 import it.jac.project_work.budget_manager.dto.AccountOutDTO;
+import it.jac.project_work.budget_manager.dto.AuthInDTO;
 import it.jac.project_work.budget_manager.dto.AuthResponseDTO;
 import it.jac.project_work.budget_manager.entity.Account;
 import it.jac.project_work.budget_manager.repository.AccountRepository;
 import it.jac.project_work.budget_manager.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -78,8 +80,30 @@ public class AuthService {
         response.setJwt(JwtUtil.generateToken(account.getEmail(), account.getRoles()));
         return response;
     }
+
+    public AuthResponseDTO login(AuthInDTO dto){
+        Account account = new Account();
+        if(dto == null){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameters");
+        }
+        if(dto.getEmail() == null){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameter: email");
+        }
+        Optional<Account> optionalAccount = this.accountRepository.findByEmail(dto.getEmail());
+        if(!optionalAccount.isPresent()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found");
+        }
+        account = optionalAccount.get();
+
+        if(!passwordEncoder.matches(dto.getPassword(), account.getPassword())){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+        }
+        AuthResponseDTO response = new AuthResponseDTO();
+        response.setUser(AccountOutDTO.build(account));
+        response.setJwt(JwtUtil.generateToken(account.getEmail(), account.getRoles()));
+
+       return response;
+    }
 }
 
 
-// TODO login function
-// TODO AccountOutDTO build function (fix)
