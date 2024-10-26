@@ -24,6 +24,7 @@ public class Account {
     @Column(name = "email")
     private String email;
 
+
     @Column(name = "password")
     private String password;
 
@@ -52,12 +53,21 @@ public class Account {
     @OneToMany(mappedBy = "account")
     private Set<Share> shares;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    private Set<Role> roles;
 
     public Account(){
         this.children = new HashSet<>();
         this.incomes = new HashSet<>();
         this.expenses = new HashSet<>();
         this.shares = new HashSet<>();
+        this.roles = new HashSet<>();
+        roles.add(Role.USER);
+        if(parent == null){
+            roles.add(Role.PARENT);
+        }
+
     }
 
     public Account(long id, String name, String surname, String email, String password, Date bithdate, String image, Timestamp createdAt, Account parent, Set<Account> children, Set<Expense> expenses, Set<Income> incomes, Set<Share> shares) {
@@ -74,6 +84,10 @@ public class Account {
         this.expenses = expenses;
         this.incomes = incomes;
         this.shares = shares;
+        roles.add(Role.USER);
+        if(parent == null){
+            roles.add(Role.PARENT);
+        }
     }
 
     public long getId() {
@@ -82,6 +96,14 @@ public class Account {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
 
     public String getName() {
