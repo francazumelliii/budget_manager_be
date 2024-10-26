@@ -94,12 +94,21 @@ public class AccountOutDTO {
         dto.setEmail(entity.getEmail());
         dto.setBirthdate(entity.getBithdate() != null ? entity.getBithdate().toString() : null);
         dto.setImage(entity.getImage());
-        dto.setParent(entity.getParent() != null ? AccountOutDTO.build(entity.getParent()) : null);
+        dto.setParent(entity.getParent() != null ? buildSingleEntity(entity.getParent()) : null);
 
         List<AccountOutDTO> childrenList = new ArrayList<>();
-        entity.getChildren().forEach(ch -> childrenList.add(AccountOutDTO.build(ch)));
+        entity.getChildren().forEach(ch -> childrenList.add(AccountOutDTO.buildSingleEntity(ch)));
         dto.setChildren(childrenList);
 
+        return dto;
+    }
+    private static AccountOutDTO buildSingleEntity(Account account){
+        AccountOutDTO dto = new AccountOutDTO();
+        dto.setName(account.getName());
+        dto.setSurname(account.getSurname());
+        dto.setEmail(account.getEmail());
+        dto.setBirthdate(account.getBithdate().toString());
+        dto.setImage(account.getImage());
         return dto;
     }
 
