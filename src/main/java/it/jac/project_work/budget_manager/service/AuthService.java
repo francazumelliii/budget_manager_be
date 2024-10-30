@@ -64,10 +64,12 @@ public class AuthService {
         }else{
             account.setImage("default-image.png");
         }
+        account.setMenuList("[{name: 'Menu', value: 'fa-solid fa-house'}]");
         if(dto.getParentId() != null){
             Optional<Account> optionalParent = this.accountRepository.findById(dto.getParentId());
             if(optionalParent.isPresent()){
                 account.setParent(optionalParent.get());
+                account.setMenuList("[{name: 'Menu', value: 'fa-solid fa-house'}, {'name: 'Profile', value: 'fa-solid fa-user'}]");
             }else{
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Parent Entity not found id: [" +dto.getParentId() + "]");
             }

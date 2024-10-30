@@ -36,6 +36,8 @@ public class Account {
 
     @Column(name = "created_at")
     private Timestamp createdAt;
+    @Column(name = "menu_list")
+    private String menuList;
 
     @JoinColumn(name = "parent_id")
     @ManyToOne()
@@ -70,7 +72,7 @@ public class Account {
 
     }
 
-    public Account(long id, String name, String surname, String email, String password, Date bithdate, String image, Timestamp createdAt, Account parent, Set<Account> children, Set<Expense> expenses, Set<Income> incomes, Set<Share> shares) {
+    public Account(long id, String name, String surname, String email, String password, Date bithdate, String image, Timestamp createdAt, Account parent, Set<Account> children, Set<Expense> expenses, Set<Income> incomes, Set<Share> shares, String menuList) {
         this.id = id;
         this.name = name;
         this.surname = surname;
@@ -79,6 +81,7 @@ public class Account {
         this.bithdate = bithdate;
         this.image = image;
         this.createdAt = createdAt;
+        this.menuList = menuList;
         this.parent = parent;
         this.children = children;
         this.expenses = expenses;
@@ -92,6 +95,14 @@ public class Account {
 
     public long getId() {
         return id;
+    }
+
+    public String getMenuList() {
+        return menuList;
+    }
+
+    public void setMenuList(String menuList) {
+        this.menuList = menuList;
     }
 
     public void setId(long id) {

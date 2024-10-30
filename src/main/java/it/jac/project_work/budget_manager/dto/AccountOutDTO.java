@@ -12,6 +12,7 @@ public class AccountOutDTO {
     private String email;
     private String birthdate;
     private String image;
+    private String menuList;
     private List<AccountOutDTO> children;
     private AccountOutDTO parent;
 
@@ -21,7 +22,7 @@ public class AccountOutDTO {
 
     }
 
-    public AccountOutDTO(String name, String surname, String email, String birthdate, String image, List<AccountOutDTO> children, AccountOutDTO parent) {
+    public AccountOutDTO(String name, String surname, String email, String birthdate, String image, List<AccountOutDTO> children, AccountOutDTO parent, String menuList) {
         this.name = name;
         this.surname = surname;
         this.email = email;
@@ -29,6 +30,7 @@ public class AccountOutDTO {
         this.image = image;
         this.children = children;
         this.parent = parent;
+        this.menuList = menuList;
     }
 
     public String getName() {
@@ -45,6 +47,14 @@ public class AccountOutDTO {
 
     public void setSurname(String surname) {
         this.surname = surname;
+    }
+
+    public String getMenuList() {
+        return menuList;
+    }
+
+    public void setMenuList(String menuList) {
+        this.menuList = menuList;
     }
 
     public String getEmail() {
@@ -95,6 +105,7 @@ public class AccountOutDTO {
         dto.setBirthdate(entity.getBithdate() != null ? entity.getBithdate().toString() : null);
         dto.setImage(entity.getImage());
         dto.setParent(entity.getParent() != null ? buildSingleEntity(entity.getParent()) : null);
+        dto.setMenuList(entity.getMenuList());
 
         List<AccountOutDTO> childrenList = new ArrayList<>();
         entity.getChildren().forEach(ch -> childrenList.add(AccountOutDTO.buildSingleEntity(ch)));
@@ -109,6 +120,7 @@ public class AccountOutDTO {
         dto.setEmail(account.getEmail());
         dto.setBirthdate(account.getBithdate().toString());
         dto.setImage(account.getImage());
+        dto.setMenuList(account.getMenuList());
         return dto;
     }
 
