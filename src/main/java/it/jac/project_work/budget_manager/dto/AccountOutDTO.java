@@ -1,6 +1,7 @@
 package it.jac.project_work.budget_manager.dto;
 
 import it.jac.project_work.budget_manager.entity.Account;
+import it.jac.project_work.budget_manager.entity.Role;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ public class AccountOutDTO {
     private String menuList;
     private List<AccountOutDTO> children;
     private AccountOutDTO parent;
+    private Enum<Role> role;
 
 
 
@@ -22,7 +24,7 @@ public class AccountOutDTO {
 
     }
 
-    public AccountOutDTO(String name, String surname, String email, String birthdate, String image, List<AccountOutDTO> children, AccountOutDTO parent, String menuList) {
+    public AccountOutDTO(String name, String surname, String email, String birthdate, String image, List<AccountOutDTO> children, AccountOutDTO parent, String menuList, Enum<Role> role) {
         this.name = name;
         this.surname = surname;
         this.email = email;
@@ -31,10 +33,19 @@ public class AccountOutDTO {
         this.children = children;
         this.parent = parent;
         this.menuList = menuList;
+        this.role = role;
     }
 
     public String getName() {
         return name;
+    }
+
+    public Enum<Role> getRole() {
+        return role;
+    }
+
+    public void setRole(Enum<Role> role) {
+        this.role = role;
     }
 
     public void setName(String name) {
@@ -106,6 +117,7 @@ public class AccountOutDTO {
         dto.setImage(entity.getImage());
         dto.setParent(entity.getParent() != null ? buildSingleEntity(entity.getParent()) : null);
         dto.setMenuList(entity.getMenuList());
+        dto.setRole(entity.getParent() == null ? Role.PARENT : Role.USER);
 
         List<AccountOutDTO> childrenList = new ArrayList<>();
         entity.getChildren().forEach(ch -> childrenList.add(AccountOutDTO.buildSingleEntity(ch)));
@@ -121,6 +133,7 @@ public class AccountOutDTO {
         dto.setBirthdate(account.getBithdate().toString());
         dto.setImage(account.getImage());
         dto.setMenuList(account.getMenuList());
+        dto.setRole(Role.USER);
         return dto;
     }
 

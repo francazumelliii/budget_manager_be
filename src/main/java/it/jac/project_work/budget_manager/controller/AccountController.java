@@ -54,13 +54,13 @@ public class AccountController {
 
 
     @GetMapping("/me/expenses/recent")
-    public List<ExpenseOutDTO> getLastMonthExpenses(){
+    public List<ExpenseOutDTO> getLastMonthExpenses(@Param("limit") Integer limit){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Optional<Account> account = this.accountRepository.findByEmail(authentication.getName());
         if(!account.isPresent()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Entity not found");
         }
-        return this.expenseService.getLastMonthExpenses(account.get());
+        return this.expenseService.getLastMonthExpenses(account.get(), limit);
 
     }
 
