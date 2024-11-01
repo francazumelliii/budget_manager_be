@@ -5,7 +5,9 @@ import io.jsonwebtoken.Jwt;
 import it.jac.project_work.budget_manager.dto.AccountInDTO;
 import it.jac.project_work.budget_manager.dto.ExpenseOutDTO;
 import it.jac.project_work.budget_manager.entity.Account;
+import it.jac.project_work.budget_manager.entity.Expense;
 import it.jac.project_work.budget_manager.repository.AccountRepository;
+import it.jac.project_work.budget_manager.repository.ExpenseRepository;
 import it.jac.project_work.budget_manager.security.JwtService;
 import it.jac.project_work.budget_manager.security.JwtUtil;
 import it.jac.project_work.budget_manager.service.AccountService;
@@ -13,6 +15,7 @@ import it.jac.project_work.budget_manager.service.AuthService;
 import it.jac.project_work.budget_manager.service.ExpenseService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -39,19 +42,26 @@ public class AccountController {
     public final AccountRepository accountRepository;
     @Autowired
     public final ExpenseService expenseService;
-    public AccountController(AccountService accountService, JwtService jwtService, AccountRepository accountRepository, ExpenseService expenseService){
+    @Autowired
+    public ExpenseRepository expenseRepository;
+    public AccountController(AccountService accountService, JwtService jwtService, AccountRepository accountRepository, ExpenseService expenseService, ExpenseRepository expenseRepository){
         this.accountService = accountService;
         this.jwtService = jwtService;
         this.accountRepository = accountRepository;
         this.expenseService = expenseService;
+        this.expenseRepository = expenseRepository;
     }
 
 
-    @GetMapping("")
-    public Collection<GrantedAuthority> getLastMonthExpenses(){
+    @GetMapping("/me/expenses/recent")
+    public List<ExpenseOutDTO> getLastMonthExpenses(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        authentication.getAuthorities();
-        return (Collection<GrantedAuthority>) authentication.getAuthorities();
+        Optional<Account> account = this.accountRepository.findByEmail(authentication.getName());
+        if(!account.isPresent()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Entity not found");
+        }
+        return this.expenseService.getLastMonthExpenses(account.get());
+
     }
 
 }

@@ -33,6 +33,7 @@ public class ExpenseService {
         calendar.set(Calendar.MILLISECOND, 0);
 
         Timestamp firstDayOfMonth = new Timestamp(calendar.getTimeInMillis());
+        System.out.println(firstDayOfMonth.toLocalDateTime());
 
         return this.expenseRepository.findByAccountAndCreatedAtAfter(account, firstDayOfMonth)
                 .stream().map(exp -> ExpenseOutDTO.build(exp)).collect(Collectors.toList());
