@@ -18,11 +18,11 @@ public class ExpenseOutDTO {
     private LocalDateTime createdAt;
     private String image;
     private CategoryOutDTO category;
-    private ProjectOutDTO project;
+    private Long projectId;
 
     public ExpenseOutDTO(){}
 
-    public ExpenseOutDTO(Long id, String name, String description, Double amount, char frequency, LocalDateTime createdAt, String image, CategoryOutDTO category, ProjectOutDTO project) {
+    public ExpenseOutDTO(Long id, String name, String description, Double amount, char frequency, LocalDateTime createdAt, String image, CategoryOutDTO category, Long projectId) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -31,7 +31,7 @@ public class ExpenseOutDTO {
         this.createdAt = createdAt;
         this.image = image;
         this.category = category;
-        this.project = project;
+        this.projectId = projectId;
     }
 
     public static ExpenseOutDTO build(Expense entity) {
@@ -43,8 +43,15 @@ public class ExpenseOutDTO {
         dto.setFrequency(entity.getFrequency());
         dto.setCreatedAt(entity.getCreatedAt().toLocalDateTime());
         dto.setImage(entity.getImage());
-        dto.setCategory(CategoryOutDTO.build(entity.getCategory()));
-        dto.setProject(ProjectOutDTO.build(entity.getProject()));
+        if(entity.getCategory()!= null) {
+            dto.setCategory(CategoryOutDTO.build(entity.getCategory()));
+        }
+        if (entity.getProject() != null) {
+            dto.setProjectId(entity.getProject().getId());
+        } else {
+            dto.setProjectId(null);
+        }
+
         return dto;
     }
 
@@ -112,12 +119,12 @@ public class ExpenseOutDTO {
         this.category = category;
     }
 
-    public ProjectOutDTO getProject() {
-        return project;
+    public Long getProjectId() {
+        return projectId;
     }
 
-    public void setProject(ProjectOutDTO project) {
-        this.project = project;
+    public void setProjectId(Long projectId) {
+        this.projectId = projectId;
     }
 
 
