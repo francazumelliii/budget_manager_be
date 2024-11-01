@@ -33,6 +33,11 @@ public class Project {
     @OneToMany(mappedBy = "project")
     private Set<Share> shares;
 
+    @JoinColumn(name = "account_id")
+    @ManyToOne
+    private Account account;
+
+
 
     public Project(){
         this.shares = new HashSet<>();
@@ -40,7 +45,7 @@ public class Project {
 
     }
 
-    public Project(long id, String name, String description, String image, Double goalAmount, Timestamp createdAt, Set<Expense> expenses, Set<Share> shares) {
+    public Project(long id, String name, String description, String image, Double goalAmount, Timestamp createdAt, Set<Expense> expenses, Set<Share> shares, Account account) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -49,6 +54,15 @@ public class Project {
         this.createdAt = createdAt;
         this.expenses = expenses;
         this.shares = shares;
+        this.account = account;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
     }
 
     public long getId() {

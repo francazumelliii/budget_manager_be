@@ -11,25 +11,22 @@ public class Expense {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @JoinColumn(name = "name")
+    @Column(name = "name")
     private String name;
 
-    @JoinColumn(name = "surname")
-    private String surname;
-
-    @JoinColumn(name = "amount")
+    @Column(name = "amount")
     private Double amount;
 
-    @JoinColumn(name = "frequency")
+    @Column(name = "frequency")
     private char frequency;
 
-    @JoinColumn(name = "description")
+    @Column(name = "description")
     private String description;
 
-    @JoinColumn(name = "image")
+    @Column(name = "image")
     private String image;
 
-    @JoinColumn(name = "created_at")
+    @Column(name = "created_at")
     private Timestamp createdAt;
 
     @JoinColumn(name = "category_id")
@@ -46,10 +43,9 @@ public class Expense {
 
     public Expense(){}
 
-    public Expense(long id, String name, String surname, Double amount, char frequency, String description, String image, Timestamp createdAt, Category category, Project project, Account account) {
+    public Expense(long id, String name, Double amount, char frequency, String description, String image, Timestamp createdAt, Category category, Project project, Account account) {
         this.id = id;
         this.name = name;
-        this.surname = surname;
         this.amount = amount;
         this.frequency = frequency;
         this.description = description;
@@ -76,13 +72,6 @@ public class Expense {
         this.name = name;
     }
 
-    public String getSurname() {
-        return surname;
-    }
-
-    public void setSurname(String surname) {
-        this.surname = surname;
-    }
 
     public Double getAmount() {
         return amount;
