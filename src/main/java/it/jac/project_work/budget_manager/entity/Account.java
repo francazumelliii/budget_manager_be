@@ -55,6 +55,9 @@ public class Account {
     @OneToMany(mappedBy = "account")
     private Set<Share> shares;
 
+    @OneToMany(mappedBy = "account")
+    private Set<Project> projects;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     private Set<Role> roles;
@@ -65,6 +68,7 @@ public class Account {
         this.expenses = new HashSet<>();
         this.shares = new HashSet<>();
         this.roles = new HashSet<>();
+        this.projects = new HashSet<>();
         roles.add(Role.USER);
         if(parent == null){
             roles.add(Role.PARENT);
@@ -72,7 +76,7 @@ public class Account {
 
     }
 
-    public Account(long id, String name, String surname, String email, String password, Date bithdate, String image, Timestamp createdAt, Account parent, Set<Account> children, Set<Expense> expenses, Set<Income> incomes, Set<Share> shares, String menuList) {
+    public Account(long id, String name, String surname, String email, String password, Date bithdate, String image, Timestamp createdAt, Account parent, Set<Account> children, Set<Expense> expenses, Set<Income> incomes, Set<Share> shares, String menuList, Set<Project> projects) {
         this.id = id;
         this.name = name;
         this.surname = surname;
@@ -87,10 +91,23 @@ public class Account {
         this.expenses = expenses;
         this.incomes = incomes;
         this.shares = shares;
+        this.projects = projects;
         roles.add(Role.USER);
         if(parent == null){
             roles.add(Role.PARENT);
         }
+    }
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = new Timestamp(System.currentTimeMillis());
+    }
+
+    public Set<Project> getProjects() {
+        return projects;
+    }
+
+    public void setProjects(Set<Project> projects) {
+        this.projects = projects;
     }
 
     public long getId() {
