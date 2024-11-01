@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 
 @Configuration
@@ -21,10 +22,11 @@ public class SecurityConfig {
                 .authorizeRequests(authorizeRequests ->
                         authorizeRequests
                                 .requestMatchers("/api/v1/auth/login", "/api/v1/auth/token", "/api/v1/auth/signup").permitAll()
-                                .requestMatchers("/api/v1/user/**").hasAnyAuthority("USER")
+                                .requestMatchers("/api/v1/account/**").hasAnyAuthority("USER")
                                 .requestMatchers("/api/v1/parent/**").hasAnyAuthority("USER", "PARENT")
                                 .anyRequest().authenticated()
-                );
+
+                ).addFilterBefore(new JwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class); // Assicurati di usare il filtro corretto
         return http.build();
     }
 

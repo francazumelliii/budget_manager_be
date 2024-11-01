@@ -1,13 +1,14 @@
 package it.jac.project_work.budget_manager.service;
 
-import com.nimbusds.openid.connect.sdk.assurance.evidences.attachment.HashAlgorithm;
 import it.jac.project_work.budget_manager.dto.AccountInDTO;
 import it.jac.project_work.budget_manager.dto.AccountOutDTO;
 import it.jac.project_work.budget_manager.dto.AuthInDTO;
 import it.jac.project_work.budget_manager.dto.AuthResponseDTO;
 import it.jac.project_work.budget_manager.entity.Account;
+import it.jac.project_work.budget_manager.entity.Role;
 import it.jac.project_work.budget_manager.repository.AccountRepository;
 import it.jac.project_work.budget_manager.security.JwtUtil;
+import org.hibernate.annotations.CurrentTimestamp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.HttpStatus;
@@ -16,7 +17,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Timestamp;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class AuthService {
@@ -64,21 +69,30 @@ public class AuthService {
         }else{
             account.setImage("default-image.png");
         }
-        account.setMenuList("[{name: 'Menu', value: 'fa-solid fa-house'}]");
-        if(dto.getParentId() != null){
+
+        account.setMenuList("[{\"name\": \"Menu\", \"value\": \"/homepage\", \"icon\": \"fa-solid fa-house\"}, {\"name\": \"Profile\", \"value\": \"/profile\"}], \"value\": \"fa-solid fa-house\"");
+        Set<Role> roles = new HashSet<>();
+        if (dto.getParentId() != null) {
             Optional<Account> optionalParent = this.accountRepository.findById(dto.getParentId());
-            if(optionalParent.isPresent()){
+            if (optionalParent.isPresent()) {
                 account.setParent(optionalParent.get());
-                account.setMenuList("[{name: 'Menu', value: 'fa-solid fa-house'}, {'name: 'Profile', value: 'fa-solid fa-user'}]");
-            }else{
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Parent Entity not found id: [" +dto.getParentId() + "]");
+                roles.add(Role.USER);
+                account.setMenuList("[{\"name\": \"Menu\", \"value\": \"/homepage\", \"icon\": \"fa-solid fa-house\"}]");
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Parent Entity not found id: [" + dto.getParentId() + "]");
             }
+        } else {
+            roles.add(Role.USER);
+            roles.add(Role.PARENT);
         }
+
+        account.setRoles(roles);
 
         AuthResponseDTO response = new AuthResponseDTO();
 
         account =  this.accountRepository.save(account);
         response.setUser(AccountOutDTO.build(account));
+        System.out.println(account.getRoles());
         response.setJwt(JwtUtil.generateToken(account.getEmail(), account.getRoles()));
         return response;
     }
