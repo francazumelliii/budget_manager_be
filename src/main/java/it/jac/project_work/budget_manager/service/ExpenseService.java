@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,7 +23,7 @@ public class ExpenseService {
         this.expenseRepository = expenseRepository;
     }
 
-    public List<ExpenseOutDTO> getLastMonthExpenses(Account account){
+    public List<ExpenseOutDTO> getLastMonthExpenses(Account account, Integer limit){
 
         // get first day of current month
         Calendar calendar = Calendar.getInstance();
@@ -34,9 +35,17 @@ public class ExpenseService {
 
         Timestamp firstDayOfMonth = new Timestamp(calendar.getTimeInMillis());
         System.out.println(firstDayOfMonth.toLocalDateTime());
-
-        return this.expenseRepository.findByAccountAndCreatedAtAfter(account, firstDayOfMonth)
+        List<ExpenseOutDTO> list = new ArrayList<>();
+        list = this.expenseRepository.findByAccountAndCreatedAtAfter(account, firstDayOfMonth)
                 .stream().map(exp -> ExpenseOutDTO.build(exp)).collect(Collectors.toList());
+
+        if(limit == null || limit > list.size()){
+            return list;
+        }else if(limit <= list.size()){
+            return list.subList(0,limit);
+        }
+        return List.of();
+
 
     }
 
