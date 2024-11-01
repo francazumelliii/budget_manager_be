@@ -3,32 +3,35 @@ package it.jac.project_work.budget_manager.entity;
 
 import jakarta.persistence.*;
 
+import java.sql.Date;
 import java.sql.Timestamp;
 
 @Entity
 public class Income {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JoinColumn(name = "id")
+    @Column(name = "id")
     private long id;
 
-    @JoinColumn(name = "name")
+    @Column(name = "name")
     private String name;
 
-    @JoinColumn(name = "description")
+    @Column(name = "description")
     private String description;
 
-    @JoinColumn(name = "frequency")
+    @Column(name = "frequency")
     private char frequency;
 
-    @JoinColumn(name = "amount")
+    @Column(name = "amount")
     private Double amount;
 
-    @JoinColumn(name = "image")
+    @Column(name = "image")
     private String image;
 
-    @JoinColumn(name = "created_at")
+    @Column(name = "created_at")
     private Timestamp createdAt;
+    @Column(name = "date")
+    private Date date;
 
     @JoinColumn(name = "account_id")
     @ManyToOne()
@@ -36,10 +39,11 @@ public class Income {
 
 
 
+
     public Income(){}
 
 
-    public Income(long id, String name, String description, char frequency, Double amount, String image, Timestamp createdAt, Account account) {
+    public Income(long id, String name, String description, char frequency, Double amount, String image, Timestamp createdAt, Account account, Date date) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -48,6 +52,16 @@ public class Income {
         this.image = image;
         this.createdAt = createdAt;
         this.account = account;
+        this.date = date;
+    }
+
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
     }
 
     public long getId() {
