@@ -8,5 +8,5 @@ import java.sql.Timestamp;
 import java.util.List;
 
 public interface ExpenseRepository extends JpaRepository<Expense,Long> {
-    List<Expense> findByAccountAndCreatedAtAfter(Account account, Timestamp date);
+    List<Expense> findByAccountAndCreatedAtGreaterThanEqual(Account account, Timestamp date);
 }
