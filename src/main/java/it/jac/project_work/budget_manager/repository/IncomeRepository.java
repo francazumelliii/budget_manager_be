@@ -9,5 +9,6 @@ import java.sql.Date;
 import java.util.List;
 
 public interface IncomeRepository extends JpaRepository<Income, Long> {
-    List<Income> findByAccountAndDateAfter(Account account, Date date);
+    List<Income> findByAccountAndDateGreaterThanEqual(Account account, Date date);
+    List<Income> findByAccount(Account account);
 }

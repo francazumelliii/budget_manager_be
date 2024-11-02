@@ -34,8 +34,9 @@ public class IncomeService {
         java.util.Date utilDate = calendar.getTime();
 
         Date sqlDate = new Date(utilDate.getTime());
-        list = this.incomeRepository.findByAccountAndDateAfter(account,sqlDate);
-        if(list == null || limit > list.size()){
+        System.out.println(sqlDate);
+        list = this.incomeRepository.findByAccountAndDateGreaterThanEqual(account,sqlDate);
+        if(limit == null || limit > list.size()){
             return list.stream().map(income -> IncomeOutDTO.build(income)).collect(Collectors.toList());
         }
         else if(limit <= list.size()){
