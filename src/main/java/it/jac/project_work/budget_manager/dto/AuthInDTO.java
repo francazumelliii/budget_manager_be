@@ -5,8 +5,8 @@ public class AuthInDTO {
     private String email;
     private String password;
 
-    public AuthInDTO(){}
-    public AuthInDTO(String email, String password){
+    private AuthInDTO(){}
+    private AuthInDTO(String email, String password){
         this.email = email;
         this.password = password;
     }

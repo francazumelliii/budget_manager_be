@@ -15,9 +15,9 @@ public class IncomeOutDTO {
         private LocalDateTime createdAt;
         private LocalDate date;
 
-        public IncomeOutDTO(){}
+    private IncomeOutDTO(){}
 
-    public IncomeOutDTO(Long id, String name, String description, char frequency, Double amount, String image, LocalDateTime createdAt, LocalDate date) {
+    private IncomeOutDTO(Long id, String name, String description, char frequency, Double amount, String image, LocalDateTime createdAt, LocalDate date) {
         this.id = id;
         this.name = name;
         this.description = description;

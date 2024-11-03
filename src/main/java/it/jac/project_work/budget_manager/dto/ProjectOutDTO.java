@@ -4,6 +4,7 @@ import it.jac.project_work.budget_manager.entity.Account;
 import it.jac.project_work.budget_manager.entity.Expense;
 import it.jac.project_work.budget_manager.entity.Project;
 import it.jac.project_work.budget_manager.entity.Share;
+import org.springframework.boot.autoconfigure.task.TaskExecutionProperties;
 
 import javax.sound.sampled.Port;
 import java.sql.Timestamp;
@@ -21,12 +22,12 @@ public class ProjectOutDTO {
     private Double goalAmount;
     private LocalDateTime createdAt;
     private List<ExpenseOutDTO> expenses;
-    private AccountOutDTO creator;
-    private List<AccountOutDTO> accounts;
+    private SimpleAccountOutDTO creator;
+    private List<SimpleAccountOutDTO> accounts;
 
-    public ProjectOutDTO(){}
+    private ProjectOutDTO(){}
 
-    public ProjectOutDTO(Long id, String name, String description, String image, Double goalAmount, LocalDateTime createdAt, List<ExpenseOutDTO> expenses, List<AccountOutDTO> accounts, AccountOutDTO creator) {
+    private ProjectOutDTO(Long id, String name, String description, String image, Double goalAmount, LocalDateTime createdAt, List<ExpenseOutDTO> expenses, List<SimpleAccountOutDTO> accounts, SimpleAccountOutDTO creator) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -94,19 +95,19 @@ public class ProjectOutDTO {
         this.expenses = expenses;
     }
 
-    public List<AccountOutDTO> getAccounts() {
+    public List<SimpleAccountOutDTO> getAccounts() {
         return accounts;
     }
 
-    public void setAccounts(List<AccountOutDTO> accounts) {
+    public void setAccounts(List<SimpleAccountOutDTO> accounts) {
         this.accounts = accounts;
     }
 
-    public AccountOutDTO getCreator() {
+    public SimpleAccountOutDTO getCreator() {
         return creator;
     }
 
-    public void setCreator(AccountOutDTO creator) {
+    public void setCreator(SimpleAccountOutDTO creator) {
         this.creator = creator;
     }
 
@@ -119,10 +120,10 @@ public class ProjectOutDTO {
         dto.setGoalAmount(entity.getGoalAmount());
         dto.setCreatedAt(entity.getCreatedAt().toLocalDateTime());
         dto.setExpenses(entity.getExpenses().stream().map(exp-> ExpenseOutDTO.build(exp)).collect(Collectors.toList()));
-        dto.setCreator(AccountOutDTO.build(entity.getAccount()));
-        List<AccountOutDTO> accounts = entity.getShares()
+        dto.setCreator(SimpleAccountOutDTO.build(entity.getAccount()));
+        List<SimpleAccountOutDTO> accounts = entity.getShares()
                 .stream().map(Share::getAccount)
-                .map(AccountOutDTO:: build)
+                .map(SimpleAccountOutDTO:: build)
                 .collect(Collectors.toList());
         dto.setAccounts(accounts);
         return dto;

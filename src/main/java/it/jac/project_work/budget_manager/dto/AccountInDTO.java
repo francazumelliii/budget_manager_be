@@ -12,9 +12,9 @@ public class AccountInDTO {
     private Long parentId;
 
 
-    public AccountInDTO(){}
+    private AccountInDTO(){}
 
-    public AccountInDTO(String name, String surname, String email, String password, Date birthdate, String image, Long parentId) {
+    private AccountInDTO(String name, String surname, String email, String password, Date birthdate, String image, Long parentId) {
         this.name = name;
         this.surname = surname;
         this.email = email;
