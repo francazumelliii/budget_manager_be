@@ -2,19 +2,14 @@ package it.jac.project_work.budget_manager.controller;
 
 
 import io.jsonwebtoken.Jwt;
-import it.jac.project_work.budget_manager.dto.AccountInDTO;
-import it.jac.project_work.budget_manager.dto.ExpenseOutDTO;
-import it.jac.project_work.budget_manager.dto.IncomeOutDTO;
+import it.jac.project_work.budget_manager.dto.*;
 import it.jac.project_work.budget_manager.entity.Account;
 import it.jac.project_work.budget_manager.entity.Expense;
 import it.jac.project_work.budget_manager.repository.AccountRepository;
 import it.jac.project_work.budget_manager.repository.ExpenseRepository;
 import it.jac.project_work.budget_manager.security.JwtService;
 import it.jac.project_work.budget_manager.security.JwtUtil;
-import it.jac.project_work.budget_manager.service.AccountService;
-import it.jac.project_work.budget_manager.service.AuthService;
-import it.jac.project_work.budget_manager.service.ExpenseService;
-import it.jac.project_work.budget_manager.service.IncomeService;
+import it.jac.project_work.budget_manager.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
@@ -24,9 +19,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collection;
@@ -49,13 +42,16 @@ public class AccountController {
     public final ExpenseRepository expenseRepository;
     @Autowired
     public final IncomeService incomeService;
-    public AccountController(AccountService accountService, JwtService jwtService, AccountRepository accountRepository, ExpenseService expenseService, ExpenseRepository expenseRepository, IncomeService incomeService){
+    @Autowired
+    public final ProjectService projectService;
+    public AccountController(AccountService accountService, JwtService jwtService, AccountRepository accountRepository, ExpenseService expenseService, ExpenseRepository expenseRepository, IncomeService incomeService, ProjectService projectService){
         this.accountService = accountService;
         this.jwtService = jwtService;
         this.accountRepository = accountRepository;
         this.expenseService = expenseService;
         this.expenseRepository = expenseRepository;
         this.incomeService = incomeService;
+        this.projectService = projectService;
     }
 
 
@@ -80,4 +76,17 @@ public class AccountController {
         return this.incomeService.getLastMonthIncomes(account.get(), limit);
     }
 
+    @GetMapping("/me/projects")
+    public List<ProjectOutDTO> getAllUserProjects(@Param("expensesLimit") Integer limit){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return this.projectService.getProjectListByAccount(userEmail, limit);
+    }
+
+    @PostMapping("/me/expenses")
+    public ExpenseOutDTO saveExpense(@RequestBody ExpenseInDTO dto){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return this.expenseService.saveExpense(dto, userEmail);
+    }
 }

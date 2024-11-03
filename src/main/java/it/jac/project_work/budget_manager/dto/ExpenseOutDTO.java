@@ -19,10 +19,11 @@ public class ExpenseOutDTO {
     private String image;
     private CategoryOutDTO category;
     private Long projectId;
+    private LocalDate date;
 
-    public ExpenseOutDTO(){}
+    private ExpenseOutDTO(){}
 
-    public ExpenseOutDTO(Long id, String name, String description, Double amount, char frequency, LocalDateTime createdAt, String image, CategoryOutDTO category, Long projectId) {
+    private ExpenseOutDTO(Long id, String name, String description, Double amount, char frequency, LocalDateTime createdAt, String image, CategoryOutDTO category, Long projectId, LocalDate date) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -32,6 +33,7 @@ public class ExpenseOutDTO {
         this.image = image;
         this.category = category;
         this.projectId = projectId;
+        this.date = date;
     }
 
     public static ExpenseOutDTO build(Expense entity) {
@@ -43,6 +45,7 @@ public class ExpenseOutDTO {
         dto.setFrequency(entity.getFrequency());
         dto.setCreatedAt(entity.getCreatedAt().toLocalDateTime());
         dto.setImage(entity.getImage());
+        dto.setDate(entity.getDate().toLocalDate());
         if(entity.getCategory()!= null) {
             dto.setCategory(CategoryOutDTO.build(entity.getCategory()));
         }
@@ -53,6 +56,14 @@ public class ExpenseOutDTO {
         }
 
         return dto;
+    }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
     }
 
     public Long getId() {

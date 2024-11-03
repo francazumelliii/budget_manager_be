@@ -3,6 +3,7 @@ package it.jac.project_work.budget_manager.entity;
 
 import jakarta.persistence.*;
 
+import java.sql.Date;
 import java.sql.Timestamp;
 
 @Entity
@@ -28,6 +29,8 @@ public class Expense {
 
     @Column(name = "created_at")
     private Timestamp createdAt;
+    @Column(name = "date")
+    private Date date;
 
     @JoinColumn(name = "category_id")
     @ManyToOne
@@ -43,7 +46,7 @@ public class Expense {
 
     public Expense(){}
 
-    public Expense(long id, String name, Double amount, char frequency, String description, String image, Timestamp createdAt, Category category, Project project, Account account) {
+    public Expense(long id, String name, Date date, Double amount, char frequency, String description, String image, Timestamp createdAt, Category category, Project project, Account account) {
         this.id = id;
         this.name = name;
         this.amount = amount;
@@ -54,6 +57,7 @@ public class Expense {
         this.category = category;
         this.project = project;
         this.account = account;
+        this.date = date;
     }
 
     public long getId() {
@@ -66,6 +70,18 @@ public class Expense {
 
     public String getName() {
         return name;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
     }
 
     public void setName(String name) {
