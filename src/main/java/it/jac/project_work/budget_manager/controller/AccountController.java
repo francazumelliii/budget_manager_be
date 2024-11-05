@@ -89,4 +89,25 @@ public class AccountController {
         String userEmail = authentication.getName();
         return this.expenseService.saveExpense(dto, userEmail);
     }
+    @PostMapping("/me/incomes")
+    public IncomeOutDTO saveIncome(@RequestBody IncomeInDTO dto){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return this.incomeService.saveIncome(dto, userEmail);
+    }
+
+    @PostMapping("/me/projects")
+    public ProjectOutDTO saveProject(@RequestBody ProjectInDTO dto){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return this.projectService.saveProject(userEmail, dto);
+    }
+    @PostMapping("/me/children")
+    public AccountOutDTO saveChild(@RequestBody AccountInDTO dto){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return this.accountService.saveChild(dto, userEmail);
+    }
+
+
 }
