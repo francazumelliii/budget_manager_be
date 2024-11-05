@@ -56,7 +56,7 @@ public class ExpenseService {
         Timestamp firstDayOfMonth = new Timestamp(calendar.getTimeInMillis());
         System.out.println(firstDayOfMonth.toLocalDateTime());
         List<ExpenseOutDTO> list = new ArrayList<>();
-        list = this.expenseRepository.findByAccountAndCreatedAtGreaterThanEqual(account, firstDayOfMonth)
+        list = this.expenseRepository.findByAccountAndCreatedAtGreaterThanEqualOrderByDateDesc(account, firstDayOfMonth)
                 .stream().map(exp -> ExpenseOutDTO.build(exp)).collect(Collectors.toList());
 
         if(limit == null || limit > list.size()){
