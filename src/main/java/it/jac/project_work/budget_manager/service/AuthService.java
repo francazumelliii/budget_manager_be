@@ -39,7 +39,7 @@ public class AuthService {
         if(dto.getEmail() != null){
             Optional<Account> optionalAccount = this.accountRepository.findByEmail(dto.getEmail());
             if(optionalAccount.isPresent()){
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "A user with the same email already exist");
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "A user with the same email already exists");
             }
             account.setEmail(dto.getEmail());
         }else{
