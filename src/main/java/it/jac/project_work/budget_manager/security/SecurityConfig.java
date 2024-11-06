@@ -23,10 +23,10 @@ public class SecurityConfig {
                         authorizeRequests
                                 .requestMatchers("/api/v1/auth/login", "/api/v1/auth/token", "/api/v1/auth/signup").permitAll()
                                 .requestMatchers("/api/v1/account/**").hasAnyAuthority("USER")
-                                .requestMatchers("/api/v1/parent/**").hasAnyAuthority("USER", "PARENT")
+                                .requestMatchers("/api/v1/account/me/parent/**").hasAnyAuthority( "PARENT")
                                 .anyRequest().authenticated()
 
-                ).addFilterBefore(new JwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class); // Assicurati di usare il filtro corretto
+                ).addFilterBefore(new JwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

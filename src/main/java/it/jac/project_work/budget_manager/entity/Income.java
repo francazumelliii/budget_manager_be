@@ -11,7 +11,7 @@ public class Income {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private long id;
+    private Long id;
 
     @Column(name = "name")
     private String name;
@@ -43,7 +43,7 @@ public class Income {
     public Income(){}
 
 
-    public Income(long id, String name, String description, char frequency, Double amount, String image, Timestamp createdAt, Account account, Date date) {
+    public Income(Long id, String name, String description, char frequency, Double amount, String image, Timestamp createdAt, Account account, Date date) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -64,11 +64,11 @@ public class Income {
         this.date = date;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

@@ -95,5 +95,53 @@ public class IncomeService {
         return IncomeOutDTO.build(this.incomeRepository.save(income));
     }
 
+    public IncomeOutDTO updateIncome(String userEmail, IncomeInDTO dto, Long id){
+        Account account = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+        if (id == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameter: id");
+        }
+        Income income = this.incomeRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Income entity not found"));
+        if(income.getAccount().getId() != account.getId()){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot update other user's income");
+        }
+
+        if(dto.getName() != null){
+            income.setName(dto.getName());
+        }
+        if(dto.getDescription() != null){
+            income.setDescription(dto.getDescription());
+        }
+        if(dto.getAmount() != null){
+            income.setAmount(dto.getAmount());
+        }
+        if(dto.getFrequency() != null){
+            income.setFrequency(dto.getFrequency().charAt(0));
+        }
+        if(dto.getDate() != null ){
+            income.setDate(dto.getDate());
+        }
+        if(dto.getImage() != null ){
+            income.setImage(dto.getImage());
+        }
+        return IncomeOutDTO.build( this.incomeRepository.save(income));
+
+    }
+
+
+    public void deleteIncome(String userEmail, Long id){
+        Account account = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+        if(id == null){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameter: id");
+        }
+        Income income = this.incomeRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Income entity not found"));
+        if(income.getAccount().getId() != account.getId()){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot delete other user's income");
+        }
+        this.incomeRepository.delete(income);
+    }
 
 }

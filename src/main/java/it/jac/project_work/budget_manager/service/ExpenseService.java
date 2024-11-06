@@ -12,11 +12,15 @@ import it.jac.project_work.budget_manager.repository.AccountRepository;
 import it.jac.project_work.budget_manager.repository.CategoryRepository;
 import it.jac.project_work.budget_manager.repository.ExpenseRepository;
 import it.jac.project_work.budget_manager.repository.ProjectRepository;
+import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.data.cassandra.CassandraReactiveRepositoriesAutoConfiguration;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.Date;
@@ -216,5 +220,89 @@ public class ExpenseService {
                 }).collect(Collectors.toList());
 
     }
+    public List<ExpenseOutDTO> allChildExpenses(Long id, String userEmail){
+
+        Optional<Account> child = this.accountRepository.findById(id);
+        if(!child.isPresent()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found");
+        }
+        Optional<Account> parent = this.accountRepository.findByEmail(userEmail);
+        if(!parent.isPresent()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity (parent) not found");
+        }
+        child = parent.get().getChildren()
+                .stream().filter(c -> c.getId() == id).findAny();
+        if(!child.isPresent()){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot see other user's children data");
+        }
+
+        return this.expenseRepository.findAllChildExpenses(child.get().getId(), parent.get().getId())
+                .stream().map(expense -> ExpenseOutDTO.build(expense)).collect(Collectors.toList());
+    }
+
+    public ExpenseOutDTO updateExpense(String userEmail, ExpenseInDTO dto, Long id){
+        Account account = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+
+        if(dto == null ){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameter");
+        }
+        if(id == null){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameter: id");
+        }
+        Optional<Expense> entity = this.expenseRepository.findById(id);
+        if(entity.get().getAccount().getId() != account.getId()){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot update other user's expenses");
+        }
+        if(!entity.isPresent()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Expense entity not found");
+        }
+        if(dto.getName() != null){
+            entity.get().setName(dto.getName());
+        }
+        if(dto.getDescription() != null){
+            entity.get().setDescription(dto.getDescription());
+        }
+        if(dto.getAmount() != null && dto.getAmount() > 0){
+            entity.get().setAmount(dto.getAmount());
+        }
+        if(dto.getFrequency() != null){
+            entity.get().setFrequency(dto.getFrequency().charAt(0));
+        }
+        if(dto.getDate() != null ){
+            entity.get().setDate(dto.getDate());
+        }
+        if(dto.getImage() != null){
+            entity.get().setImage(dto.getImage());
+        }
+        if(dto.getCategoryId() != null){
+            Optional<Category> category = this.categoryRepository.findById(dto.getCategoryId().longValue());
+            if (!category.isPresent()) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Category entity not found");
+            }
+            entity.get().setCategory(category.get());
+        }
+        if(dto.getProjectId() != null){
+            Optional<Project> project = this.projectRepository.findById(dto.getProjectId().longValue());
+            if(!project.isPresent()){
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project entity not found");
+            }
+            entity.get().setProject(project.get());
+        }
+
+        return ExpenseOutDTO.build(this.expenseRepository.save(entity.get()));
+    }
+
+    public void deleteExpense(String userEmail, Long id){
+        Account account = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+        Expense expense = this.expenseRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Expense entity not found"));
+        if(expense.getAccount().getId() != account.getId()){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot delete other user's expense");
+        }
+        this.expenseRepository.delete(expense);
+    }
+
 
 }

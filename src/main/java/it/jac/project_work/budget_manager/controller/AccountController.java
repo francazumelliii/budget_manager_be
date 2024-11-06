@@ -10,6 +10,7 @@ import it.jac.project_work.budget_manager.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.config.annotation.web.oauth2.client.OAuth2ClientSecurityMarker;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -116,6 +117,41 @@ public class AccountController {
         String userEmail = authentication.getName();
         return this.accountService.monthlyStats(date, userEmail);
 
+    }
+    @GetMapping("/me/parent/{id}/expenses")
+    public List<ExpenseOutDTO> allChildExpenses(@PathVariable("id") Long id){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+
+        return this.expenseService.allChildExpenses(id, userEmail);
+    }
+
+    @PatchMapping("/me/expenses/{id}")
+    public ExpenseOutDTO updateExpense(@PathVariable("id") Long id, @RequestBody ExpenseInDTO dto){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return this.expenseService.updateExpense(userEmail, dto, id);
+    }
+
+    @DeleteMapping("/me/expenses/{id}")
+    public void deleteExpense(@PathVariable("id") Long id){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        this.expenseService.deleteExpense(userEmail, id);
+    }
+
+    @PatchMapping("/me/incomes/{id}")
+    public IncomeOutDTO updateIncome(@PathVariable("id") Long id, @RequestBody IncomeInDTO dto){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return this.incomeService.updateIncome(userEmail, dto, id);
+    }
+
+    @DeleteMapping("/me/incomes/{id}")
+    public void deleteIncome(@PathVariable("id") Long id){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return this.incomeService.deleteIncome(userEmail, id);
     }
 
 

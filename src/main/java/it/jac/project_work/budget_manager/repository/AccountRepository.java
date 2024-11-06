@@ -19,4 +19,5 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Query("SELECT SUM(e.amount) FROM Expense e WHERE e.account.id = :id AND e.date BETWEEN :startDate AND :endDate")
     Double findLastMonthExpense(@Param("id") Long id, @Param("startDate") LocalDate startDate, @Param("endDate")LocalDate endDate);
 
+
 }
