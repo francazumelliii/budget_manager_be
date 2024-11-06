@@ -1,29 +1,21 @@
 package it.jac.project_work.budget_manager.controller;
 
 
-import io.jsonwebtoken.Jwt;
 import it.jac.project_work.budget_manager.dto.*;
 import it.jac.project_work.budget_manager.entity.Account;
-import it.jac.project_work.budget_manager.entity.Expense;
 import it.jac.project_work.budget_manager.repository.AccountRepository;
 import it.jac.project_work.budget_manager.repository.ExpenseRepository;
 import it.jac.project_work.budget_manager.security.JwtService;
-import it.jac.project_work.budget_manager.security.JwtUtil;
 import it.jac.project_work.budget_manager.service.*;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -108,6 +100,25 @@ public class AccountController {
         String userEmail = authentication.getName();
         return this.accountService.saveChild(dto, userEmail);
     }
+
+    @GetMapping("/me/expenses/stats/monthly")
+    public List<MonthlyStatsPerWeekDTO> getMonthlyStats(@RequestParam("date") LocalDate date, @RequestParam("weeklyDivided") boolean weeklyDivided){
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+      String userEmail = authentication.getName();
+      if(weeklyDivided){
+        return this.expenseService.monthlyStatsPerWeek(userEmail, date);
+      }
+      return null;
+    }
+    @GetMapping("/me/stats/monthly")
+    public MonthlyStatsDTO monthlyStats(@RequestParam("date") LocalDate date){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return this.accountService.monthlyStats(date, userEmail);
+
+    }
+
+
 
 
 }

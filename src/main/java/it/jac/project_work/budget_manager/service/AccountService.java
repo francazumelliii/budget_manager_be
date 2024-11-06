@@ -3,17 +3,16 @@ package it.jac.project_work.budget_manager.service;
 
 import it.jac.project_work.budget_manager.dto.AccountInDTO;
 import it.jac.project_work.budget_manager.dto.AccountOutDTO;
-import it.jac.project_work.budget_manager.dto.ExpenseOutDTO;
+import it.jac.project_work.budget_manager.dto.MonthlyStatsDTO;
 
-import java.sql.Date;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Period;
 import it.jac.project_work.budget_manager.entity.Account;
 import it.jac.project_work.budget_manager.entity.Role;
 import it.jac.project_work.budget_manager.repository.AccountRepository;
-import org.apache.tomcat.util.http.parser.HttpParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -80,6 +79,32 @@ public class AccountService {
         child.setCreatedAt(new Timestamp(System.currentTimeMillis()));
 
         return AccountOutDTO.build(this.accountRepository.save(child));
+    }
+
+    public MonthlyStatsDTO monthlyStats(LocalDate date, String userEmail) {
+        Account account = accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+
+        LocalDate startDate = (date == null ? LocalDate.now() : date).withDayOfMonth(1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+        Double totalIncomes = this.accountRepository.findMonthlyIncome(account.getId(), startDate, endDate);
+        if(totalIncomes == null || totalIncomes.isNaN()){
+            totalIncomes = (double) 0;
+        }
+        Double totalExpenses = this.accountRepository.findLastMonthExpense(account.getId(), startDate, endDate);
+        if(totalExpenses == null || totalExpenses.isNaN()){
+            totalExpenses = (double) 0;
+        }
+        return new MonthlyStatsDTO(round(totalExpenses,2), round(totalIncomes,2));
+
+    }
+
+
+    private Double round(Double value, int places) {
+        if (value == null) return 0.0;
+        BigDecimal bd = BigDecimal.valueOf(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 
 
