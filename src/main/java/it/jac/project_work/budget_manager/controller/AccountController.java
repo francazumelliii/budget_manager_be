@@ -151,7 +151,7 @@ public class AccountController {
     public void deleteIncome(@PathVariable("id") Long id){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
-        return this.incomeService.deleteIncome(userEmail, id);
+         this.incomeService.deleteIncome(userEmail, id);
     }
 
 

@@ -113,7 +113,7 @@ public class IncomeService {
         if(dto.getDescription() != null){
             income.setDescription(dto.getDescription());
         }
-        if(dto.getAmount() != null){
+        if(dto.getAmount() != null && dto.getAmount() > 0){
             income.setAmount(dto.getAmount());
         }
         if(dto.getFrequency() != null){
