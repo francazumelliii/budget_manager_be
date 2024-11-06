@@ -2,6 +2,8 @@ package it.jac.project_work.budget_manager.service;
 
 import it.jac.project_work.budget_manager.dto.ExpenseInDTO;
 import it.jac.project_work.budget_manager.dto.ExpenseOutDTO;
+import it.jac.project_work.budget_manager.dto.MonthlyStatsPerWeekDTO;
+import it.jac.project_work.budget_manager.dto.WeekStatsDTO;
 import it.jac.project_work.budget_manager.entity.Account;
 import it.jac.project_work.budget_manager.entity.Category;
 import it.jac.project_work.budget_manager.entity.Expense;
@@ -11,6 +13,7 @@ import it.jac.project_work.budget_manager.repository.CategoryRepository;
 import it.jac.project_work.budget_manager.repository.ExpenseRepository;
 import it.jac.project_work.budget_manager.repository.ProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.data.cassandra.CassandraReactiveRepositoriesAutoConfiguration;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -120,6 +124,97 @@ public class ExpenseService {
         }
 
         return ExpenseOutDTO.build(this.expenseRepository.save(expense));
+    }
+
+    public List<MonthlyStatsPerWeekDTO> monthlyStatsPerWeek(String userEmail, LocalDate date) {
+        if (date == null) {
+            date = LocalDate.now();
+        }
+        int weekCount = 1;
+
+        LocalDate startDate = date.withDayOfMonth(1);
+        LocalDate endDate = date.withDayOfMonth(date.lengthOfMonth());
+
+        Optional<Account> account = this.accountRepository.findByEmail(userEmail);
+        if (!account.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found");
+        }
+        List<Expense> expenses = this.expenseRepository.findAllBetweenDates(account.get().getId(), startDate, endDate);
+        List<MonthlyStatsPerWeekDTO> weeklyStats = new ArrayList<>();
+
+        LocalDate currentWeekStart = startDate;
+        while (!currentWeekStart.isAfter(endDate)) {
+            LocalDate currentWeekEnd = currentWeekStart.plusDays(6).isAfter(endDate) ? endDate : currentWeekStart.plusDays(6);
+
+            // Filter expenses for the current week
+            LocalDate finalCurrentWeekStart = currentWeekStart;
+            List<Expense> weeklyExpenses = expenses.stream()
+                    .filter(expense -> {
+                        LocalDate expenseDate = expense.getDate().toLocalDate();
+                        return !expenseDate.isBefore(finalCurrentWeekStart) && !expenseDate.isAfter(currentWeekEnd);
+                    })
+                    .collect(Collectors.toList());
+
+            List<WeekStatsDTO> dailyStats = new ArrayList<>();
+
+            // Create a list of all days in the current week
+            for (LocalDate day = currentWeekStart; !day.isAfter(currentWeekEnd); day = day.plusDays(1)) {
+                LocalDate finalDay = day;
+                double dailyTotal = weeklyExpenses.stream()
+                        .filter(expense -> expense.getDate().toLocalDate().equals(finalDay))
+                        .mapToDouble(Expense::getAmount)
+                        .sum();
+
+                // Add the day to the stats, using 0 if no expenses were found
+                dailyStats.add(new WeekStatsDTO(finalDay.getDayOfWeek().toString(), dailyTotal, new ExtraDTO("it")));
+            }
+
+            String[] days = {"", "st", "nd", "rd", "th"};
+            String suffix = (weekCount < days.length) ? days[weekCount] : "th";
+            weeklyStats.add(new MonthlyStatsPerWeekDTO(weekCount + suffix + " Week", dailyStats));
+            weekCount ++;
+
+            currentWeekStart = currentWeekEnd.plusDays(1);
+
+        }
+
+        return weeklyStats;
+    }
+
+    // Assuming ExtraDTO is defined as follows:
+    public class ExtraDTO {
+        private String code;
+
+        public ExtraDTO(String code) {
+            this.code = code;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public void setCode(String code) {
+            this.code = code;
+        }
+    }
+
+
+
+    public List<ExpenseOutDTO> monthlyStats(String userEmail, LocalDate date){
+        if(date == null){
+            date = LocalDate.now();
+        }
+        LocalDate startDate = date.withDayOfMonth(1);
+        LocalDate endDate = date.withDayOfMonth(date.lengthOfMonth());
+        Optional<Account> account = this.accountRepository.findByEmail(userEmail);
+        if(!account.isPresent()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found");
+        }
+        return this.expenseRepository.findAllBetweenDates(account.get().getId(), startDate, endDate)
+                .stream().map(expense -> {
+                    return ExpenseOutDTO.build(expense);
+                }).collect(Collectors.toList());
+
     }
 
 }
