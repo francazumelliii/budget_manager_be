@@ -70,7 +70,15 @@ public class AuthService {
             account.setImage("default-image.png");
         }
 
-        account.setMenuList("[{\"name\": \"Menu\", \"value\": \"/homepage\", \"icon\": \"fa-solid fa-house\"}, {\"name\": \"Profile\", \"value\": \"/profile\"}], \"value\": \"fa-solid fa-house\"");
+        account.setMenuList("[\n" +
+                "    { \"name\": \"Homepage\", \"icon\": \"fa fa-house\", \"value\": \"homepage\" },\n" +
+                "    { \"name\": \"Expenses\", \"icon\": \"fa-regular fa-credit-card\", \"value\": \"expenses\" },\n" +
+                "    { \"name\": \"Incomes\", \"icon\": \"fa-regular fa-credit-card\", \"value\": \"incomes\" },\n" +
+                "    { \"name\": \"Trip\", \"icon\": \"fa-solid fa-plane\", \"value\": \"projects\" },\n" +
+                "    { \"name\": \"Account\", \"icon\": \"fa-solid fa-user\", \"value\": \"account\" }\n" +
+                "]");
+
+
         Set<Role> roles = new HashSet<>();
         if (dto.getParentId() != null) {
             Optional<Account> optionalParent = this.accountRepository.findById(dto.getParentId());
