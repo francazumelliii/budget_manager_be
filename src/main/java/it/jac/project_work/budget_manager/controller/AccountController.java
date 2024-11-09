@@ -8,6 +8,7 @@ import it.jac.project_work.budget_manager.repository.ExpenseRepository;
 import it.jac.project_work.budget_manager.security.JwtService;
 import it.jac.project_work.budget_manager.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.oauth2.client.OAuth2ClientSecurityMarker;
@@ -67,6 +68,16 @@ public class AccountController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Entity not found");
         }
         return this.incomeService.getLastMonthIncomes(account.get(), limit);
+    }
+
+    @GetMapping("/me/expenses/all")
+    public PaginationDTO getAllExpenses(@RequestParam("page") Integer page, @RequestParam("size") Integer size,@RequestParam(value = "order" ,required = false) String orderBy){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        PageInDTO dto = new PageInDTO(orderBy != null ? orderBy : "ASC", page != null ? page : 1, size != null ? size : 15);
+        return this.expenseService.getAllExpenses(userEmail, dto);
+
+
     }
 
     @GetMapping("/me/projects")

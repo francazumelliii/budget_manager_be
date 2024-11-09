@@ -1,9 +1,6 @@
 package it.jac.project_work.budget_manager.service;
 
-import it.jac.project_work.budget_manager.dto.ExpenseInDTO;
-import it.jac.project_work.budget_manager.dto.ExpenseOutDTO;
-import it.jac.project_work.budget_manager.dto.MonthlyStatsPerWeekDTO;
-import it.jac.project_work.budget_manager.dto.WeekStatsDTO;
+import it.jac.project_work.budget_manager.dto.*;
 import it.jac.project_work.budget_manager.entity.Account;
 import it.jac.project_work.budget_manager.entity.Category;
 import it.jac.project_work.budget_manager.entity.Expense;
@@ -15,6 +12,9 @@ import it.jac.project_work.budget_manager.repository.ProjectRepository;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.data.cassandra.CassandraReactiveRepositoriesAutoConfiguration;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -302,6 +302,24 @@ public class ExpenseService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot delete other user's expense");
         }
         this.expenseRepository.delete(expense);
+    }
+
+
+    public PaginationDTO<ExpenseOutDTO> getAllExpenses(String userEmail, PageInDTO dto){
+        Account account = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+
+        PageRequest pageRequest = PageRequest.of(
+                dto.getPage() > 0 ? dto.getPage() : 1, dto.getSize() > 0 ? dto.getSize() : 15, Sort.by(dto.getOrderBy()));
+
+        Page<Expense> expensePage = this.expenseRepository.findAllWithPagination(account.getId(), pageRequest);
+        PaginationDTO<ExpenseOutDTO> result = new PaginationDTO<>();
+        result.setRecords(expensePage.getContent().stream().map(expense-> ExpenseOutDTO.build(expense)).collect(Collectors.toList()));
+        result.setOrderBy(String.valueOf(expensePage.getSort()));
+        result.setSize(expensePage.getSize());
+        result.setPage(expensePage.getNumber());
+        result.setTotalRecords((int) expensePage.getTotalElements());
+        return result;
     }
 
 
