@@ -74,7 +74,7 @@ public class AccountController {
     public PaginationDTO getAllExpenses(@RequestParam("page") Integer page, @RequestParam("size") Integer size,@RequestParam(value = "order" ,required = false) String orderBy){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
-        PageInDTO dto = new PageInDTO(orderBy != null ? orderBy : "ASC", page != null ? page : 1, size != null ? size : 15);
+        PageInDTO dto = new PageInDTO(orderBy != null ? orderBy : "date", page != null ? page : 1, size != null ? size : 15);
         return this.expenseService.getAllExpenses(userEmail, dto);
 
 
