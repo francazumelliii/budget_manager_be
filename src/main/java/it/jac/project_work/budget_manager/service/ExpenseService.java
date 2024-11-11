@@ -332,6 +332,35 @@ public class ExpenseService {
     }
 
 
+    public void updateExpenseDates() {
+        List<Expense> expenses = expenseRepository.findAllByFrequencyNot('S');
 
+        for (Expense expense : expenses) {
+            LocalDate currentDate = LocalDate.now();
+            LocalDate nextDate = calculateNextDate(expense.getDate().toLocalDate(), expense.getFrequency());
+
+            if (currentDate.isEqual(expense.getDate().toLocalDate()) || currentDate.isAfter(expense.getDate().toLocalDate())) {
+                if (!expense.getDate().toLocalDate().isEqual(nextDate)) {
+                    expense.setDate(Date.valueOf(nextDate));
+                }
+            }
+        }
+
+        expenseRepository.saveAll(expenses);
+    }
+
+
+    public static LocalDate calculateNextDate(LocalDate currentDate, char frequency) {
+        switch (frequency) {
+            case 'W':
+                return currentDate.plusWeeks(1);
+            case 'M':
+                return currentDate.plusMonths(1);
+            case 'Y':
+                return currentDate.plusYears(1);
+            default:
+                return currentDate;
+        }
+    }
 
 }

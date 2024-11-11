@@ -27,5 +27,7 @@ public interface ExpenseRepository extends JpaRepository<Expense,Long> {
     @Query("SELECT e FROM Expense e WHERE e.account.id = :id")
     Page<Expense> findAllWithPagination(@Param("id") Long id, Pageable pageable);
 
+    List<Expense> findAllByFrequencyNot(char frequency);
+
 
 }
