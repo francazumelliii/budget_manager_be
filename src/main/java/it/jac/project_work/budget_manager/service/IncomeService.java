@@ -2,11 +2,17 @@ package it.jac.project_work.budget_manager.service;
 
 import it.jac.project_work.budget_manager.dto.IncomeInDTO;
 import it.jac.project_work.budget_manager.dto.IncomeOutDTO;
+import it.jac.project_work.budget_manager.dto.PageInDTO;
+import it.jac.project_work.budget_manager.dto.PaginationDTO;
 import it.jac.project_work.budget_manager.entity.Account;
 import it.jac.project_work.budget_manager.entity.Income;
 import it.jac.project_work.budget_manager.repository.AccountRepository;
 import it.jac.project_work.budget_manager.repository.IncomeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -144,4 +150,25 @@ public class IncomeService {
         this.incomeRepository.delete(income);
     }
 
+
+    public PaginationDTO<IncomeOutDTO> getAllIncomes(String userEmail, PageInDTO dto){
+        Account account = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not foun"));
+
+        Sort.Direction direction = dto.getOrderDirection().equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(direction, dto.getOrderBy());
+
+        PageRequest pageRequest = PageRequest.of(
+                Math.max(dto.getPage(), 0),
+                dto.getSize() > 0 ? dto.getSize() : 15,
+                sort);
+        Page<Income> incomesPage = this.incomeRepository.findAllWithPagination(account.getId(), pageRequest);
+        PaginationDTO<IncomeOutDTO> result = new PaginationDTO<>();
+        result.setRecords(incomesPage.getContent().stream().map(income-> IncomeOutDTO.build(income)).collect(Collectors.toList()));
+        result.setSize(incomesPage.getSize());
+        result.setOrderBy(incomesPage.getSort().toString());
+        result.setPage(incomesPage.getNumber());
+        result.setTotalRecords((int) incomesPage.getTotalElements());
+        return result;
+    }
 }
