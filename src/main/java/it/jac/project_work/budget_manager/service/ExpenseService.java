@@ -305,22 +305,33 @@ public class ExpenseService {
     }
 
 
-    public PaginationDTO<ExpenseOutDTO> getAllExpenses(String userEmail, PageInDTO dto){
+    public PaginationDTO<ExpenseOutDTO> getAllExpenses(String userEmail, PageInDTO dto) {
         Account account = this.accountRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
 
+        Sort.Direction direction = dto.getOrderDirection().equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(direction, dto.getOrderBy());
+
         PageRequest pageRequest = PageRequest.of(
-                dto.getPage() > 0 ? dto.getPage() : 1, dto.getSize() > 0 ? dto.getSize() : 15, Sort.by(dto.getOrderBy()));
+                Math.max(dto.getPage(), 0),
+                dto.getSize() > 0 ? dto.getSize() : 15,
+                sort
+        );
 
         Page<Expense> expensePage = this.expenseRepository.findAllWithPagination(account.getId(), pageRequest);
+
         PaginationDTO<ExpenseOutDTO> result = new PaginationDTO<>();
-        result.setRecords(expensePage.getContent().stream().map(expense-> ExpenseOutDTO.build(expense)).collect(Collectors.toList()));
-        result.setOrderBy(String.valueOf(expensePage.getSort()));
+        result.setRecords(expensePage.getContent().stream()
+                .map(ExpenseOutDTO::build)
+                .collect(Collectors.toList()));
+        result.setOrderBy(dto.getOrderBy());
         result.setSize(expensePage.getSize());
         result.setPage(expensePage.getNumber());
         result.setTotalRecords((int) expensePage.getTotalElements());
         return result;
     }
+
+
 
 
 }
