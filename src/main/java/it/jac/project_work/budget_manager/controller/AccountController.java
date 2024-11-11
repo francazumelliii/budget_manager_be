@@ -71,14 +71,31 @@ public class AccountController {
     }
 
     @GetMapping("/me/expenses/all")
-    public PaginationDTO getAllExpenses(@RequestParam("page") Integer page, @RequestParam("size") Integer size,@RequestParam(value = "order" ,required = false) String orderBy){
+    public PaginationDTO<ExpenseOutDTO> getAllExpenses(
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "15") Integer size,
+            @RequestParam(value = "order", defaultValue = "date") String orderBy,
+            @RequestParam(value = "direction", defaultValue = "asc") String direction) {
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
-        PageInDTO dto = new PageInDTO(orderBy != null ? orderBy : "date", page != null ? page : 1, size != null ? size : 15);
+
+        PageInDTO dto = new PageInDTO(orderBy, page, size, direction);
         return this.expenseService.getAllExpenses(userEmail, dto);
-
-
     }
+    @GetMapping("/me/incomes/all")
+    public PaginationDTO<IncomeOutDTO> getAllIncomes(
+            @RequestParam(value="page",defaultValue = "0") Integer page,
+            @RequestParam(value="size",defaultValue = "15") Integer size,
+            @RequestParam(value="order",defaultValue = "date") String orderBy,
+            @RequestParam(value="direction",defaultValue = "asc") String direction
+    ){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        PageInDTO dto = new PageInDTO(orderBy, page,size, direction);
+        return this.incomeService.getAllIncomes(userEmail,dto);
+    }
+
 
     @GetMapping("/me/projects")
     public List<ProjectOutDTO> getAllUserProjects(@Param("expensesLimit") Integer limit){
