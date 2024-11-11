@@ -47,7 +47,11 @@ public class AccountController {
         this.incomeService = incomeService;
         this.projectService = projectService;
     }
-
+    @GetMapping("/updateValues")
+    public void updateValues(){
+        this.expenseService.updateExpenseDates();
+        this.incomeService.updateIncomeDates();
+    }
 
     @GetMapping("/me/expenses/recent")
     public List<ExpenseOutDTO> getLastMonthExpenses(@Param("limit") Integer limit){
