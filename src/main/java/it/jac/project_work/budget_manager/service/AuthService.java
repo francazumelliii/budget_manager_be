@@ -76,6 +76,7 @@ public class AuthService {
                 "    { \"name\": \"Incomes\", \"icon\": \"fa-regular fa-credit-card\", \"value\": \"incomes\" },\n" +
                 "    { \"name\": \"Trip\", \"icon\": \"fa-solid fa-plane\", \"value\": \"projects\" },\n" +
                 "    { \"name\": \"Account\", \"icon\": \"fa-solid fa-user\", \"value\": \"account\" }\n" +
+                "    { \"name\": \"Children\", \"icon\": \"fa-solid fa-child\", \"value\": \"children\" }\n" +
                 "]");
 
 
