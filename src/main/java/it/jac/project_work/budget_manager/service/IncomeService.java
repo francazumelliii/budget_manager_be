@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static it.jac.project_work.budget_manager.service.ExpenseService.calculateNextDate;
+
 @Service
 public class IncomeService {
 
@@ -171,4 +173,23 @@ public class IncomeService {
         result.setTotalRecords((int) incomesPage.getTotalElements());
         return result;
     }
+
+    public void updateIncomeDates() {
+        List<Income> incomes = incomeRepository.findAllByFrequencyNot('S');
+
+        for (Income income : incomes) {
+            LocalDate currentDate = LocalDate.now();
+            LocalDate nextDate = calculateNextDate(income.getDate().toLocalDate(), income.getFrequency());
+
+            if (currentDate.isEqual(income.getDate().toLocalDate()) || currentDate.isAfter(income.getDate().toLocalDate())) {
+                if (!income.getDate().toLocalDate().isEqual(nextDate)) {
+                    income.setDate(Date.valueOf(nextDate));
+                }
+            }
+
+        }
+
+        incomeRepository.saveAll(incomes);
+    }
+
 }

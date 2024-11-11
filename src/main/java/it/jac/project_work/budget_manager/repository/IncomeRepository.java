@@ -18,4 +18,6 @@ public interface IncomeRepository extends JpaRepository<Income, Long> {
 
     @Query("SELECT i FROM Income i WHERE i.account.id = :id")
     Page<Income> findAllWithPagination(@Param("id") Long id, Pageable pageable);
+
+    List<Income> findAllByFrequencyNot(char frequency);
 }
