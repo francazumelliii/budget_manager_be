@@ -1,6 +1,7 @@
 package it.jac.project_work.budget_manager.service;
 
 
+import ch.qos.logback.core.html.NOPThrowableRenderer;
 import it.jac.project_work.budget_manager.dto.AccountInDTO;
 import it.jac.project_work.budget_manager.dto.AccountOutDTO;
 import it.jac.project_work.budget_manager.dto.MonthlyStatsDTO;
@@ -8,10 +9,14 @@ import it.jac.project_work.budget_manager.dto.MonthlyStatsDTO;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Period;
+
+import it.jac.project_work.budget_manager.dto.SimpleAccountOutDTO;
 import it.jac.project_work.budget_manager.entity.Account;
 import it.jac.project_work.budget_manager.entity.Role;
 import it.jac.project_work.budget_manager.repository.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
+import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -97,6 +102,36 @@ public class AccountService {
         }
         return new MonthlyStatsDTO(round(totalExpenses,2), round(totalIncomes,2));
 
+    }
+
+    public MonthlyStatsDTO monthlyStatsChild(Long id, String userEmail, LocalDate date){
+        if(id == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameter: id");
+        Account parent = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity (parent) not found"));
+        Optional<Account> child = this.accountRepository.findById(id);
+        if(!child.isPresent()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found");
+        child = parent.getChildren().stream().filter(c -> c.getId() == id).findAny();
+        if(!child.isPresent()) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot see other user's children data");
+
+
+        LocalDate startDate = date == null ? LocalDate.now().withDayOfMonth(1) : date.withDayOfMonth(1);
+        LocalDate endDate = LocalDate.now().withDayOfMonth(startDate.lengthOfMonth());
+
+        Double monthlyExpenses = this.accountRepository.findLastMonthExpense(child.get().getId(),startDate, endDate);
+        Double monthlyIncomes = this.accountRepository.findMonthlyIncome(child.get().getId(), startDate, endDate);
+        return new MonthlyStatsDTO(monthlyExpenses != null ? monthlyExpenses : 0, monthlyIncomes != null ? monthlyIncomes : 0);
+
+
+    }
+
+
+    public SimpleAccountOutDTO searchAccount(String email, String userEmail){
+        if(userEmail.equalsIgnoreCase(email)){
+            return null;
+        }
+        Account account = this.accountRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+        return SimpleAccountOutDTO.build(account);
     }
 
 

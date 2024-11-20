@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AccountOutDTO {
-
+    private Long id;
     private String name;
     private String surname;
     private String email;
@@ -24,7 +24,8 @@ public class AccountOutDTO {
 
     }
 
-    public AccountOutDTO(String name, String surname, String email, String birthdate, String image, List<AccountOutDTO> children, AccountOutDTO parent, String menuList, Enum<Role> role) {
+    public AccountOutDTO(Long id, String name, String surname, String email, String birthdate, String image, List<AccountOutDTO> children, AccountOutDTO parent, String menuList, Enum<Role> role) {
+        this.id = id;
         this.name = name;
         this.surname = surname;
         this.email = email;
@@ -34,6 +35,14 @@ public class AccountOutDTO {
         this.parent = parent;
         this.menuList = menuList;
         this.role = role;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -110,6 +119,7 @@ public class AccountOutDTO {
 
     public static AccountOutDTO build(Account entity) {
         AccountOutDTO dto = new AccountOutDTO();
+        dto.setId(entity.getId());
         dto.setName(entity.getName());
         dto.setSurname(entity.getSurname());
         dto.setEmail(entity.getEmail());
@@ -127,6 +137,7 @@ public class AccountOutDTO {
     }
     private static AccountOutDTO buildSingleEntity(Account account){
         AccountOutDTO dto = new AccountOutDTO();
+        dto.setId(account.getId());
         dto.setName(account.getName());
         dto.setSurname(account.getSurname());
         dto.setEmail(account.getEmail());

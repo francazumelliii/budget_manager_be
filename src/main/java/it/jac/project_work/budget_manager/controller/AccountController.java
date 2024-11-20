@@ -11,12 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authorization.AuthenticatedReactiveAuthorizationManager;
 import org.springframework.security.config.annotation.web.oauth2.client.OAuth2ClientSecurityMarker;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.swing.event.InternalFrameEvent;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -101,13 +103,6 @@ public class AccountController {
     }
 
 
-    @GetMapping("/me/projects")
-    public List<ProjectOutDTO> getAllUserProjects(@Param("expensesLimit") Integer limit){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = authentication.getName();
-        return this.projectService.getProjectListByAccount(userEmail, limit);
-    }
-
     @PostMapping("/me/expenses")
     public ExpenseOutDTO saveExpense(@RequestBody ExpenseInDTO dto){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -150,14 +145,60 @@ public class AccountController {
         return this.accountService.monthlyStats(date, userEmail);
 
     }
-    @GetMapping("/me/parent/{id}/expenses")
-    public List<ExpenseOutDTO> allChildExpenses(@PathVariable("id") Long id){
+    @GetMapping("/me/parent/{id}/expenses/all")
+    public PaginationDTO<ExpenseOutDTO> allChildExpenses(
+            @PathVariable("id") Long id,
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "15") Integer size,
+            @RequestParam(value = "order", defaultValue = "date") String orderBy,
+            @RequestParam(value = "direction", defaultValue = "asc") String direction) {
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
 
-        return this.expenseService.allChildExpenses(id, userEmail);
+        PageInDTO dto = new PageInDTO(orderBy, page, size, direction);
+        return this.expenseService.getAllChildExpenses(userEmail, dto, id);
+    }
+    @GetMapping("/me/parent/{id}/incomes/all")
+    public PaginationDTO<IncomeOutDTO> allChildIncomes(
+            @PathVariable("id") Long id,
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "15") Integer size,
+            @RequestParam(value = "order", defaultValue = "date") String orderBy,
+            @RequestParam(value = "direction", defaultValue = "asc") String direction) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+
+        PageInDTO dto = new PageInDTO(orderBy, page, size, direction);
+        return this.incomeService.getAllChildIncomes(userEmail, dto, id);
     }
 
+    @GetMapping("/me/parent/{id}/incomes")
+    public List<IncomeOutDTO> allChildIncomes(@PathVariable("id") Long id, @RequestParam(value = "limit", required = false)Integer limit){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return this.incomeService.findAllChildIncomes(userEmail, id, limit);
+    }
+    @GetMapping("/me/parent/{id}/projects")
+    public List<ProjectOutDTO> allChildProjects(@PathVariable("id")Long id){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return this.projectService.findAllChildProjects(userEmail,id);
+    }
+
+    @GetMapping("/me/parent/{id}/stats")
+    public MonthlyStatsDTO lastMonthStatsChild(@PathVariable("id")Long id, @RequestParam(value = "startDate", required = false)LocalDate date){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return this.accountService.monthlyStatsChild(id, userEmail, date);
+    }
+    @GetMapping("/me/parent/{id}/expenses")
+    public MonthlyStatsDTO allChildExpensesWithPagination(@PathVariable("id")Long id, @RequestParam(value = "startDate", required = false)LocalDate date){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return this.accountService.monthlyStatsChild(id, userEmail, date);
+    }
     @PatchMapping("/me/expenses/{id}")
     public ExpenseOutDTO updateExpense(@PathVariable("id") Long id, @RequestBody ExpenseInDTO dto){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -184,6 +225,47 @@ public class AccountController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
          this.incomeService.deleteIncome(userEmail, id);
+    }
+
+    @GetMapping("/me/expenses/expiring")
+    public List<ExpenseOutDTO> getAllDueInNextFiveDays(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return this.expenseService.getAllDueInNextFiveDays(userEmail);
+    }
+
+    @GetMapping("/me/projects/all")
+    public PaginationDTO<ProjectOutDTO> getAllProjects(
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "15") Integer size,
+            @RequestParam(value = "order", defaultValue = "name") String orderBy,
+            @RequestParam(value = "direction", defaultValue = "asc") String direction)
+    {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        PageInDTO dto = new PageInDTO(orderBy, page, size, direction);
+        return this.projectService.getProjectListByAccount(userEmail, dto);
+    }
+
+    @PostMapping("/me/project/add")
+    public ProjectOutDTO addAccountToProject(@RequestBody ShareProjectInDTO dto){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return this.projectService.addAccountToProject(dto, userEmail);
+    }
+    @GetMapping("/search")
+    public SimpleAccountOutDTO searchAccount(@RequestParam(value = "email", required = true) String email){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return this.accountService.searchAccount(email, userEmail);
+    }
+
+    @DeleteMapping("/me/projects/{id}/remove")
+    public ProjectOutDTO removeAccountFromProject(@PathVariable("id") Long projectId, @RequestParam(value = "email", required = true) String email, @RequestParam("option") String option){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return this.projectService.removeAccountFromProject(userEmail, email, projectId, option);
+
     }
 
 
