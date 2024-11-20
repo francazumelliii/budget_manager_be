@@ -61,7 +61,6 @@ public class IncomeService {
             return list.stream().map(income -> IncomeOutDTO.build(income)).collect(Collectors.toList()).subList(0,limit);
 
         }
-        // TODO controller and testing
         return List.of();
 
     }
@@ -174,6 +173,35 @@ public class IncomeService {
         return result;
     }
 
+    public PaginationDTO<IncomeOutDTO> getAllChildIncomes(String userEmail, PageInDTO dto, Long id){
+        Account account = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+        Optional<Account> child = this.accountRepository.findById(id);
+        if(!child.isPresent()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found");
+        }
+        child = account.getChildren().stream().filter(c -> c.getId() == id).findAny();
+        if(!child.isPresent()){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot see other user's children data");
+        }
+
+        Sort.Direction direction = dto.getOrderDirection().equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(direction, dto.getOrderBy());
+
+        PageRequest pageRequest = PageRequest.of(
+                Math.max(dto.getPage(), 0),
+                dto.getSize() > 0 ? dto.getSize() : 15,
+                sort);
+        Page<Income> incomesPage = this.incomeRepository.findAllWithPagination(child.get().getId(), pageRequest);
+        PaginationDTO<IncomeOutDTO> result = new PaginationDTO<>();
+        result.setRecords(incomesPage.getContent().stream().map(income-> IncomeOutDTO.build(income)).collect(Collectors.toList()));
+        result.setSize(incomesPage.getSize());
+        result.setOrderBy(incomesPage.getSort().toString());
+        result.setPage(incomesPage.getNumber());
+        result.setTotalRecords((int) incomesPage.getTotalElements());
+        return result;
+    }
+
     public void updateIncomeDates() {
         List<Income> incomes = incomeRepository.findAllByFrequencyNot('S');
 
@@ -190,6 +218,32 @@ public class IncomeService {
         }
 
         incomeRepository.saveAll(incomes);
+    }
+
+    public List<IncomeOutDTO> findAllChildIncomes(String userEmail, Long id, Integer limit){
+        if(id == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameter: id");
+        Optional<Account> child = this.accountRepository.findById(id);
+            if(!child.isPresent()){
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Account entity not found");
+            }
+
+        Account parent = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parent entity not found"));
+        child = parent.getChildren().stream().filter(ch -> ch.getId() == id).findAny();
+        if(!child.isPresent()){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Cannot see other user's children data");
+        }
+
+        List<IncomeOutDTO> list =  this.incomeRepository.findAllChildIncomes(child.get().getId(), parent.getId())
+                .stream().map(income -> IncomeOutDTO.build(income)).collect(Collectors.toList());
+
+        if(limit == null || limit > list.size()){
+            return list;
+        }else if(limit <= list.size()){
+            return list.subList(0,limit);
+        }
+        return List.of();
+
     }
 
 }
