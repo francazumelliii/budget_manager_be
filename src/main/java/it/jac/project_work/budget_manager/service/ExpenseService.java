@@ -220,8 +220,8 @@ public class ExpenseService {
                 }).collect(Collectors.toList());
 
     }
-    public List<ExpenseOutDTO> allChildExpenses(Long id, String userEmail){
-
+    public List<ExpenseOutDTO> allChildExpenses(Long id, String userEmail, Integer limit){
+        if(id == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameter: id");
         Optional<Account> child = this.accountRepository.findById(id);
         if(!child.isPresent()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found");
@@ -236,8 +236,16 @@ public class ExpenseService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot see other user's children data");
         }
 
-        return this.expenseRepository.findAllChildExpenses(child.get().getId(), parent.get().getId())
+        List<ExpenseOutDTO> list = this.expenseRepository.findAllChildExpenses(child.get().getId(), parent.get().getId())
                 .stream().map(expense -> ExpenseOutDTO.build(expense)).collect(Collectors.toList());
+
+        if(limit == null || limit > list.size()){
+            return list;
+        }else if(limit <= list.size()){
+            return list.subList(0,limit);
+        }
+        return List.of();
+
     }
 
     public ExpenseOutDTO updateExpense(String userEmail, ExpenseInDTO dto, Long id){
@@ -330,6 +338,38 @@ public class ExpenseService {
         result.setTotalRecords((int) expensePage.getTotalElements());
         return result;
     }
+    public PaginationDTO<ExpenseOutDTO> getAllChildExpenses(String userEmail, PageInDTO dto, Long id) {
+        Account account = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+        Optional<Account> child = this.accountRepository.findById(id);
+        if(!child.isPresent()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found");
+        }
+        child = account.getChildren().stream().filter(c -> c.getId() == id).findAny();
+        if(!child.isPresent()){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot see other user's children data");
+        }
+        Sort.Direction direction = dto.getOrderDirection().equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(direction, dto.getOrderBy());
+
+        PageRequest pageRequest = PageRequest.of(
+                Math.max(dto.getPage(), 0),
+                dto.getSize() > 0 ? dto.getSize() : 15,
+                sort
+        );
+
+        Page<Expense> expensePage = this.expenseRepository.findAllChildWithPagination(child.get().getId(), pageRequest);
+
+        PaginationDTO<ExpenseOutDTO> result = new PaginationDTO<>();
+        result.setRecords(expensePage.getContent().stream()
+                .map(ExpenseOutDTO::build)
+                .collect(Collectors.toList()));
+        result.setOrderBy(dto.getOrderBy());
+        result.setSize(expensePage.getSize());
+        result.setPage(expensePage.getNumber());
+        result.setTotalRecords((int) expensePage.getTotalElements());
+        return result;
+    }
 
 
     public void updateExpenseDates() {
@@ -362,5 +402,12 @@ public class ExpenseService {
                 return currentDate;
         }
     }
+
+    public List<ExpenseOutDTO> getAllDueInNextFiveDays(String userEmail){
+        Account account = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+        return this.expenseRepository.findAllDueInNextFiveDays(LocalDate.now(), LocalDate.now().plusDays(5), account.getId())
+                .stream().map(expense -> ExpenseOutDTO.build(expense)).collect(Collectors.toList());
+}
 
 }
