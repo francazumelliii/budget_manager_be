@@ -1,36 +1,43 @@
 package it.jac.project_work.budget_manager.entity;
 
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-
+import jakarta.persistence.*;
+import java.io.Serializable;
 import java.sql.Timestamp;
 
 @Entity
 public class Share {
-    @Id
-    @ManyToOne()
+
+    @EmbeddedId
+    private ShareId id;
+
+    @ManyToOne
+    @MapsId("accountId")
     @JoinColumn(name = "account_id")
     private Account account;
 
-    @Id
-    @ManyToOne()
+    @ManyToOne
+    @MapsId("projectId")
     @JoinColumn(name = "project_id")
     private Project project;
 
-    @JoinColumn(name = "joined_at")
+    @Column(name = "joined_at")
     private Timestamp joinedAt;
 
-
-
-    public Share(){}
+    public Share() {}
 
     public Share(Account account, Project project, Timestamp joinedAt) {
+        this.id = new ShareId(account.getId(), project.getId());
         this.account = account;
         this.project = project;
         this.joinedAt = joinedAt;
+    }
+
+    public ShareId getId() {
+        return id;
+    }
+
+    public void setId(ShareId id) {
+        this.id = id;
     }
 
     public Account getAccount() {
@@ -57,3 +64,4 @@ public class Share {
         this.joinedAt = joinedAt;
     }
 }
+
