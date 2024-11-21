@@ -2,15 +2,12 @@ package it.jac.project_work.budget_manager.service;
 
 
 import ch.qos.logback.core.html.NOPThrowableRenderer;
-import it.jac.project_work.budget_manager.dto.AccountInDTO;
-import it.jac.project_work.budget_manager.dto.AccountOutDTO;
-import it.jac.project_work.budget_manager.dto.MonthlyStatsDTO;
+import it.jac.project_work.budget_manager.dto.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Period;
 
-import it.jac.project_work.budget_manager.dto.SimpleAccountOutDTO;
 import it.jac.project_work.budget_manager.entity.Account;
 import it.jac.project_work.budget_manager.entity.Role;
 import it.jac.project_work.budget_manager.repository.AccountRepository;
@@ -132,6 +129,24 @@ public class AccountService {
         Account account = this.accountRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
         return SimpleAccountOutDTO.build(account);
+    }
+
+    public AccountOutDTO updateAccount(String userEmail, AccountPatchDTO dto){
+        Account account = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+
+        String[] defaultCurrencies = {"€", "$", "£", "¥", "₹", "₿", "₽", "₩", "R$", "C$", "A$", "CHF", "HK$", "¥CN", "₺", "SAR", "AED", "ZAR", "SG$", "NZ$"};
+
+        if(dto.getName() != null && !dto.getName().isBlank()) account.setName(dto.getName());
+        if(dto.getSurname() != null && !dto.getSurname().isBlank()) account.setSurname(dto.getSurname());
+        if(dto.getDefaultCurrency() != null){
+            if (Arrays.stream(defaultCurrencies).anyMatch(currency -> currency.equals(dto.getDefaultCurrency()))) {
+                account.setDefaultCurrency(dto.getDefaultCurrency());
+            }else{
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Currency not found");
+            }
+        }
+        return AccountOutDTO.build(this.accountRepository.save(account));
     }
 
 

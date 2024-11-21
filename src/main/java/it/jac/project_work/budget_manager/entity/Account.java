@@ -38,6 +38,8 @@ public class Account {
     private Timestamp createdAt;
     @Column(name = "menu_list")
     private String menuList;
+    @Column(name = "default_currency")
+    private String defaultCurrency;
 
     @JoinColumn(name = "parent_id")
     @ManyToOne()
@@ -76,7 +78,7 @@ public class Account {
 
     }
 
-    public Account(long id, String name, String surname, String email, String password, Date bithdate, String image, Timestamp createdAt, Account parent, Set<Account> children, Set<Expense> expenses, Set<Income> incomes, Set<Share> shares, String menuList, Set<Project> projects) {
+    public Account(long id, String name, String surname, String defaultCurrency, String email, String password, Date bithdate, String image, Timestamp createdAt, Account parent, Set<Account> children, Set<Expense> expenses, Set<Income> incomes, Set<Share> shares, String menuList, Set<Project> projects) {
         this.id = id;
         this.name = name;
         this.surname = surname;
@@ -84,6 +86,7 @@ public class Account {
         this.password = password;
         this.bithdate = bithdate;
         this.image = image;
+        this.defaultCurrency = defaultCurrency;
         this.createdAt = createdAt;
         this.menuList = menuList;
         this.parent = parent;
@@ -104,6 +107,14 @@ public class Account {
 
     public Set<Project> getProjects() {
         return projects;
+    }
+
+    public String getDefaultCurrency() {
+        return defaultCurrency;
+    }
+
+    public void setDefaultCurrency(String defaultCurrency) {
+        this.defaultCurrency = defaultCurrency;
     }
 
     public void setProjects(Set<Project> projects) {

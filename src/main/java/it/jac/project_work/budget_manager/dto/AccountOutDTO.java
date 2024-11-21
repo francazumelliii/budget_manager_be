@@ -14,6 +14,7 @@ public class AccountOutDTO {
     private String birthdate;
     private String image;
     private String menuList;
+    private String defaultCurrency;
     private List<AccountOutDTO> children;
     private AccountOutDTO parent;
     private Enum<Role> role;
@@ -24,12 +25,13 @@ public class AccountOutDTO {
 
     }
 
-    public AccountOutDTO(Long id, String name, String surname, String email, String birthdate, String image, List<AccountOutDTO> children, AccountOutDTO parent, String menuList, Enum<Role> role) {
+    public AccountOutDTO(Long id, String name, String surname,String defaultCurrency, String email, String birthdate, String image, List<AccountOutDTO> children, AccountOutDTO parent, String menuList, Enum<Role> role) {
         this.id = id;
         this.name = name;
         this.surname = surname;
         this.email = email;
         this.birthdate = birthdate;
+        this.defaultCurrency = defaultCurrency;
         this.image = image;
         this.children = children;
         this.parent = parent;
@@ -43,6 +45,14 @@ public class AccountOutDTO {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getDefaultCurrency() {
+        return defaultCurrency;
+    }
+
+    public void setDefaultCurrency(String defaultCurrency) {
+        this.defaultCurrency = defaultCurrency;
     }
 
     public String getName() {
@@ -123,6 +133,7 @@ public class AccountOutDTO {
         dto.setName(entity.getName());
         dto.setSurname(entity.getSurname());
         dto.setEmail(entity.getEmail());
+        dto.setDefaultCurrency(entity.getDefaultCurrency());
         dto.setBirthdate(entity.getBithdate() != null ? entity.getBithdate().toString() : null);
         dto.setImage(entity.getImage());
         dto.setParent(entity.getParent() != null ? buildSingleEntity(entity.getParent()) : null);
@@ -141,6 +152,7 @@ public class AccountOutDTO {
         dto.setName(account.getName());
         dto.setSurname(account.getSurname());
         dto.setEmail(account.getEmail());
+        dto.setDefaultCurrency(account.getDefaultCurrency());
         dto.setBirthdate(account.getBithdate().toString());
         dto.setImage(account.getImage());
         dto.setMenuList(account.getMenuList());
