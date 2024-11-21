@@ -177,6 +177,11 @@ public class ProjectService {
         return ProjectOutDTO.build(updatedProject);
     }
 
+    public List<ProjectOutDTO> getAllByAccount(String userEmail){
+        Account account = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+        return this.projectRepository.findAllByAccount(account).stream().map(p -> ProjectOutDTO.build(p)).collect(Collectors.toList());
+    }
 
 
 
