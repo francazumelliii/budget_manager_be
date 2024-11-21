@@ -268,6 +268,20 @@ public class AccountController {
 
     }
 
+    @GetMapping("/me/projects")
+    public List<ProjectOutDTO> getAllByAccount(){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+        return this.projectService.getAllByAccount(userEmail);
+    }
+
+    @PatchMapping("/me")
+    public AccountOutDTO updateAccount(@RequestBody AccountPatchDTO dto){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+        return this.accountService.updateAccount(userEmail,dto);
+    }
+
 
 
 
