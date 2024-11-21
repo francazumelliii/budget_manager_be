@@ -78,6 +78,7 @@ public class AuthService {
                 "    { \"name\": \"Account\", \"icon\": \"fa-solid fa-user\", \"value\": \"account\" }\n" +
                 "    { \"name\": \"Children\", \"icon\": \"fa-solid fa-child\", \"value\": \"children\" }\n" +
                 "]");
+        account.setDefaultCurrency("€");
 
 
         Set<Role> roles = new HashSet<>();
