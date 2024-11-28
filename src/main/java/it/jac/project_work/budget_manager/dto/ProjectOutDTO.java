@@ -1,9 +1,6 @@
 package it.jac.project_work.budget_manager.dto;
 
-import it.jac.project_work.budget_manager.entity.Account;
-import it.jac.project_work.budget_manager.entity.Expense;
-import it.jac.project_work.budget_manager.entity.Project;
-import it.jac.project_work.budget_manager.entity.Share;
+import it.jac.project_work.budget_manager.entity.*;
 import org.springframework.boot.autoconfigure.task.TaskExecutionProperties;
 
 import javax.sound.sampled.Port;
@@ -23,6 +20,7 @@ public class ProjectOutDTO {
     private LocalDateTime createdAt;
     private List<ExpenseOutDTO> expenses;
     private SimpleAccountOutDTO creator;
+    //TODO: put amount to pay per project due to request caller;
     private List<SimpleAccountOutDTO> accounts;
 
     private ProjectOutDTO(){}
@@ -111,7 +109,7 @@ public class ProjectOutDTO {
         this.creator = creator;
     }
 
-    public static ProjectOutDTO build(Project entity){
+    public static ProjectOutDTO build(Project entity) {
         ProjectOutDTO dto = new ProjectOutDTO();
         dto.setId(entity.getId());
         dto.setName(entity.getName());
@@ -119,14 +117,45 @@ public class ProjectOutDTO {
         dto.setImage(entity.getImage());
         dto.setGoalAmount(entity.getGoalAmount());
         dto.setCreatedAt(entity.getCreatedAt().toLocalDateTime());
-        dto.setExpenses(entity.getExpenses().stream().map(exp-> ExpenseOutDTO.build(exp)).collect(Collectors.toList()));
-        dto.setCreator(SimpleAccountOutDTO.build(entity.getAccount()));
+
+        // Set expenses
+        dto.setExpenses(entity.getExpenses()
+                .stream()
+                .map(ExpenseOutDTO::build)
+                .collect(Collectors.toList()));
+
+        // Calculate and set the creator's split amount
+        Account creatorAccount = entity.getAccount();
+        Double creatorSplitAmount = entity.getExpenses()
+                .stream()
+                .flatMap(expense -> expense.getExpenseSplits().stream())
+                .filter(expenseSplit -> expenseSplit.getAccount().equals(creatorAccount))
+                .map(ExpenseSplit::getAmount)
+                .reduce(0.0, Double::sum);
+
+        dto.setCreator(SimpleAccountOutDTO.build(creatorAccount, creatorSplitAmount));
+
+        // Calculate and set accounts' split amounts
         List<SimpleAccountOutDTO> accounts = entity.getShares()
-                .stream().map(Share::getAccount)
-                .map(SimpleAccountOutDTO:: build)
+                .stream()
+                .map(share -> {
+                    Account account = share.getAccount();
+                    Double splitAmount = entity.getExpenses()
+                            .stream()
+                            .flatMap(expense -> expense.getExpenseSplits().stream())
+                            .filter(expenseSplit -> expenseSplit.getAccount().equals(account))
+                            .map(ExpenseSplit::getAmount)
+                            .reduce(0.0, Double::sum);
+
+                    return SimpleAccountOutDTO.build(account, splitAmount);
+                })
                 .collect(Collectors.toList());
+
         dto.setAccounts(accounts);
+
         return dto;
     }
+
+
 
 }
