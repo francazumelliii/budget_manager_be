@@ -10,9 +10,7 @@ public class BudgetManagerApplication {
 
     public static void main(String[] args) {
         ConfigurableApplicationContext context = SpringApplication.run(BudgetManagerApplication.class, args);
-
         ScheduledTasks scheduledTasks = context.getBean(ScheduledTasks.class);
-
         scheduledTasks.runDailyDateUpdates();
     }
 }
