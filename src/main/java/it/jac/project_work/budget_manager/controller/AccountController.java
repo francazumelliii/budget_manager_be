@@ -282,6 +282,22 @@ public class AccountController {
         return this.accountService.updateAccount(userEmail,dto);
     }
 
+    @GetMapping("/me/projects/{id}")
+    public ProjectOutDTO getProjectById(@PathVariable("id") Long id){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+        return this.projectService.getProjectById(userEmail,id);
+    }
+
+    @PatchMapping("/me/projects/{id}/expense/{expId}")
+    public ProjectOutDTO replaceExpenseSplit(@RequestBody SharedExpenseInDTO dto, @PathVariable("id") Long projectId, @PathVariable("expId") Long expenseId){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+        dto.setExpenseId(expenseId);
+        dto.setProjectId(projectId);
+        return this.projectService.patchShared(userEmail, dto);
+
+    }
 
 
 
