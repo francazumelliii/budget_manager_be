@@ -1,14 +1,8 @@
 package it.jac.project_work.budget_manager.service;
 
 import it.jac.project_work.budget_manager.dto.*;
-import it.jac.project_work.budget_manager.entity.Account;
-import it.jac.project_work.budget_manager.entity.Category;
-import it.jac.project_work.budget_manager.entity.Expense;
-import it.jac.project_work.budget_manager.entity.Project;
-import it.jac.project_work.budget_manager.repository.AccountRepository;
-import it.jac.project_work.budget_manager.repository.CategoryRepository;
-import it.jac.project_work.budget_manager.repository.ExpenseRepository;
-import it.jac.project_work.budget_manager.repository.ProjectRepository;
+import it.jac.project_work.budget_manager.entity.*;
+import it.jac.project_work.budget_manager.repository.*;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.data.cassandra.CassandraReactiveRepositoriesAutoConfiguration;
@@ -44,11 +38,18 @@ public class ExpenseService {
     public final CategoryRepository categoryRepository;
     @Autowired
     public final ProjectRepository projectRepository;
-    public ExpenseService(ExpenseRepository expenseRepository, AccountRepository accountRepository, CategoryRepository categoryRepository, ProjectRepository projectRepository){
+    @Autowired
+    public final ShareRepository shareRepository;
+    @Autowired
+    public final ExpenseSplitRepository expenseSplitRepository;
+
+    public ExpenseService(ExpenseRepository expenseRepository, AccountRepository accountRepository, CategoryRepository categoryRepository, ProjectRepository projectRepository, ExpenseSplitRepository expenseSplitRepository, ShareRepository shareRepository){
         this.accountRepository = accountRepository;
         this.expenseRepository = expenseRepository;
         this.categoryRepository = categoryRepository;
         this.projectRepository = projectRepository;
+        this.expenseSplitRepository = expenseSplitRepository;
+        this.shareRepository = shareRepository;
     }
 
     public List<ExpenseOutDTO> getLastMonthExpenses(Account account, Integer limit){
@@ -75,59 +76,86 @@ public class ExpenseService {
         return List.of();
     }
 
-    public ExpenseOutDTO saveExpense(ExpenseInDTO dto, String userEmail){
-
+    public ExpenseOutDTO saveExpense(ExpenseInDTO dto, String userEmail) {
         Expense expense = new Expense();
         Optional<Category> category;
-        Optional<Project> project;
+        Optional<Project> project = null;
         Optional<Account> account = this.accountRepository.findByEmail(userEmail);
-        if(!account.isPresent()){
+
+        if (!account.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
         expense.setAccount(account.get());
 
-        if(dto.getCategoryId() == null){
+        if (dto.getCategoryId() == null) {
             category = this.categoryRepository.findById(10L); // 'EXTRA' category
-        }else{
+        } else {
             category = this.categoryRepository.findById(dto.getCategoryId().longValue());
-            if(!category.isPresent()){
+            if (!category.isPresent()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category Entity not found");
             }
         }
         expense.setCategory(category.get());
 
-        if(dto.getProjectId() == null){
+        if (dto.getProjectId() == null) {
             expense.setProject(null);
-        }else{
+        } else {
             project = this.projectRepository.findById(dto.getProjectId().longValue());
-            if(!project.isPresent()){
+            if (!project.isPresent()) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project Entity not found");
             }
             expense.setProject(project.get());
         }
-        if(dto.getName() == null){
+
+        if (dto.getName() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameter: name");
         }
         expense.setName(dto.getName());
-        if(dto.getAmount() == null){
+
+        if (dto.getAmount() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameter: amount");
         }
         expense.setAmount(dto.getAmount());
-        if(dto.getFrequency() == null){
+
+        if (dto.getFrequency() == null) {
             expense.setFrequency('S');
-        }else{
+        } else {
             expense.setFrequency(dto.getFrequency().charAt(0));
         }
+
         expense.setCreatedAt(new Timestamp(System.currentTimeMillis()));
         expense.setDescription(dto.getDescription());
         expense.setImage(dto.getImage());
-        if(dto.getDate() == null){
+
+        if (dto.getDate() == null) {
             expense.setDate(Date.valueOf(LocalDate.now()));
-        }else{
+        } else {
             expense.setDate(dto.getDate());
         }
 
-        return ExpenseOutDTO.build(this.expenseRepository.save(expense));
+        Expense savedExpense = this.expenseRepository.save(expense);
+
+        if (dto.getProjectId() != null) {
+            List<Share> participants = this.shareRepository.findByProjectId(dto.getProjectId());
+
+            if (participants.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No participants found for the project");
+            }
+
+            participants.add(new Share(project.get().getAccount(), project.get(),new Timestamp( System.currentTimeMillis())));
+
+            double splitAmount = dto.getAmount() / participants.size();
+
+            for (Share participant : participants) {
+                ExpenseSplit split = new ExpenseSplit();
+                split.setExpense(savedExpense);
+                split.setAccount(participant.getAccount());
+                split.setAmount(splitAmount);
+                this.expenseSplitRepository.save(split);
+            }
+        }
+
+        return ExpenseOutDTO.build(savedExpense);
     }
 
     public List<MonthlyStatsPerWeekDTO> monthlyStatsPerWeek(String userEmail, LocalDate date) {
