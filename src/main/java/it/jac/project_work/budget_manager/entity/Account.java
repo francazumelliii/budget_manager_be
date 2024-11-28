@@ -59,12 +59,15 @@ public class Account {
 
     @OneToMany(mappedBy = "account")
     private Set<Project> projects;
+    @OneToMany(mappedBy = "account")
+    private Set<ExpenseSplit> expenseSplits;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     private Set<Role> roles;
 
     public Account(){
+        this.expenseSplits = new HashSet<>();
         this.children = new HashSet<>();
         this.incomes = new HashSet<>();
         this.expenses = new HashSet<>();
@@ -78,7 +81,7 @@ public class Account {
 
     }
 
-    public Account(long id, String name, String surname, String defaultCurrency, String email, String password, Date bithdate, String image, Timestamp createdAt, Account parent, Set<Account> children, Set<Expense> expenses, Set<Income> incomes, Set<Share> shares, String menuList, Set<Project> projects) {
+    public Account(long id, String name, String surname, String defaultCurrency, String email, String password, Date bithdate, String image, Timestamp createdAt, Account parent, Set<Account> children, Set<Expense> expenses, Set<Income> incomes, Set<Share> shares, String menuList, Set<Project> projects, Set<ExpenseSplit> expenseSplits) {
         this.id = id;
         this.name = name;
         this.surname = surname;
@@ -94,12 +97,22 @@ public class Account {
         this.expenses = expenses;
         this.incomes = incomes;
         this.shares = shares;
+        this.expenseSplits = expenseSplits;
         this.projects = projects;
         roles.add(Role.USER);
         if(parent == null){
             roles.add(Role.PARENT);
         }
     }
+
+    public Set<ExpenseSplit> getExpenseSplits() {
+        return expenseSplits;
+    }
+
+    public void setExpenseSplits(Set<ExpenseSplit> expenseSplits) {
+        this.expenseSplits = expenseSplits;
+    }
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = new Timestamp(System.currentTimeMillis());
