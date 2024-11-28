@@ -25,18 +25,18 @@ public interface ExpenseRepository extends JpaRepository<Expense,Long> {
     List<Expense> findAllBetweenDates(@Param("id") Long id, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
 
-    @Query("SELECT e FROM Expense e WHERE e.account.parent.id = :parentId AND e.account.id = :id")
+    @Query("SELECT e FROM Expense e WHERE e.account.parent.id = :parentId AND e.account.id = :id ORDER BY e.date")
     List<Expense> findAllChildExpenses(@Param("id") Long id, @Param("parentId") Long parentId);
 
-    @Query("SELECT e FROM Expense e WHERE e.account.id = :id")
+    @Query("SELECT e FROM Expense e WHERE e.account.id = :id ORDER BY e.date")
     Page<Expense> findAllWithPagination(@Param("id") Long id, Pageable pageable);
 
-    @Query("SELECT e FROM Expense e WHERE e.account.id = :id")
+    @Query("SELECT e FROM Expense e WHERE e.account.id = :id ORDER BY e.date")
     Page<Expense> findAllChildWithPagination(@Param("id") Long id, Pageable pageable);
 
     List<Expense> findAllByFrequencyNot(char frequency);
 
-    @Query("SELECT e FROM Expense e WHERE e.date BETWEEN :today AND :fiveDaysAfter AND e.account.id = :id AND e.frequency != 'S'")
+    @Query("SELECT e FROM Expense e WHERE e.date BETWEEN :today AND :fiveDaysAfter AND e.account.id = :id AND e.frequency != 'S' ORDER BY e.date")
     List<Expense> findAllDueInNextFiveDays(@Param("today") LocalDate today, @Param("fiveDaysAfter") LocalDate fiveDaysAfter, @Param("id") Long id);
 
 
