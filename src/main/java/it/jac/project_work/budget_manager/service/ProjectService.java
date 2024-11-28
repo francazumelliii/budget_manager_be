@@ -1,14 +1,8 @@
 package it.jac.project_work.budget_manager.service;
 
 import it.jac.project_work.budget_manager.dto.*;
-import it.jac.project_work.budget_manager.entity.Account;
-import it.jac.project_work.budget_manager.entity.Project;
-import it.jac.project_work.budget_manager.entity.Share;
-import it.jac.project_work.budget_manager.entity.ShareId;
-import it.jac.project_work.budget_manager.repository.AccountRepository;
-import it.jac.project_work.budget_manager.repository.ExpenseRepository;
-import it.jac.project_work.budget_manager.repository.ProjectRepository;
-import it.jac.project_work.budget_manager.repository.ShareRepository;
+import it.jac.project_work.budget_manager.entity.*;
+import it.jac.project_work.budget_manager.repository.*;
 import org.apache.tomcat.util.http.parser.HttpParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -36,13 +30,16 @@ public class ProjectService {
     public final ShareRepository shareRepository;
     @Autowired
     public final ExpenseRepository expenseRepository;
+    @Autowired
+    public final ExpenseSplitRepository expenseSplitRepository;
 
 
-    public ProjectService(ProjectRepository projectRepository, AccountRepository accountRepository, ShareRepository shareRepository, ExpenseRepository expenseRepository){
+    public ProjectService(ProjectRepository projectRepository, AccountRepository accountRepository, ShareRepository shareRepository, ExpenseRepository expenseRepository, ExpenseSplitRepository expenseSplitRepository){
         this.projectRepository = projectRepository;
         this.accountRepository = accountRepository;
         this.shareRepository = shareRepository;
         this.expenseRepository = expenseRepository;
+        this.expenseSplitRepository = expenseSplitRepository;
     }
 
     public PaginationDTO<ProjectOutDTO> getProjectListByAccount(String userMail, PageInDTO dto) {
@@ -183,6 +180,86 @@ public class ProjectService {
         return this.projectRepository.findAllByAccount(account).stream().map(p -> ProjectOutDTO.build(p)).collect(Collectors.toList());
     }
 
+    public ProjectOutDTO getProjectById(String userEmail, Long id){
+        Account account = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow( () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+        Optional<Project> project = this.projectRepository.findById(id);
+        if(!project.isPresent()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project entity not found");
 
+        List<Project> list = this.projectRepository.findAllByAccount(account);
+        project = list.stream().filter(pr -> pr.getId() == id).findAny();
+        if(!project.isPresent()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot see other user's projects");
+        return ProjectOutDTO.build(project.get());
+
+    }
+    public ProjectOutDTO patchShared(String userEmail, SharedExpenseInDTO dto) {
+        if(dto.getShared().isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameter: shared account list");
+        Account account = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+
+        if (dto.getExpenseId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameter: expenseId");
+        }
+        if (dto.getProjectId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameter: projectId");
+        }
+
+        Expense expense = this.expenseRepository.findById(dto.getExpenseId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Expense entity not found"));
+        Project project = this.projectRepository.findById(dto.getProjectId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project entity not found"));
+
+        expense = project.getExpenses().stream()
+                .filter(e -> e.getId() == dto.getExpenseId())
+                .findAny()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This project does not have this expense"));
+
+        double totalAmount = expense.getAmount();
+        int numberOfParticipants = dto.getShared().size();
+        if (numberOfParticipants == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No participants provided");
+        }
+        double amountPerParticipant = totalAmount / numberOfParticipants;
+
+        List<SimpleAccountOutDTO> sharedAccounts = dto.getShared();
+
+        List<ExpenseSplit> existingSplits = this.expenseSplitRepository.findExpenseSplitByExpense(expense);
+        for (ExpenseSplit split : existingSplits) {
+            boolean found = sharedAccounts.stream()
+                    .anyMatch(sharedAccountDTO -> sharedAccountDTO.getEmail().equals(split.getAccount().getEmail()));
+            if (!found) {
+                this.expenseSplitRepository.delete(split);
+            }
+        }
+
+        for (SimpleAccountOutDTO sharedAccountDTO : sharedAccounts) {
+            Account sharedAccount = this.accountRepository.findByEmail(sharedAccountDTO.getEmail())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared account not found"));
+
+            Optional<Share> share = project.getShares().stream()
+                    .filter(w -> w.getAccount().equals(sharedAccount))
+                    .findAny();
+
+            if (!share.isPresent() && project.getAccount().getId() != account.getId()) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "The user hasn't joined the project");
+            }
+
+            ExpenseSplit split = this.expenseSplitRepository.findExpenseSplitByAccountAndExpense(sharedAccount, expense);
+
+            if (split != null) {
+                split.setAmount(amountPerParticipant);
+                this.expenseSplitRepository.save(split);
+            } else {
+                ExpenseSplit newSplit = new ExpenseSplit();
+                newSplit.setExpense(expense);
+                newSplit.setAccount(sharedAccount);
+                newSplit.setAmount(amountPerParticipant);
+                this.expenseSplitRepository.save(newSplit);
+            }
+        }
+
+
+        return ProjectOutDTO.build(project);
+    }
 
 }

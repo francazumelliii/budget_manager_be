@@ -14,12 +14,12 @@ import java.util.List;
 
 public interface ProjectRepository extends JpaRepository<Project, Long> {
 
-    @Query("SELECT DISTINCT p FROM Project p LEFT JOIN Share s ON s.project = p WHERE p.account = :account OR s.account = :account")
+    @Query("SELECT DISTINCT p FROM Project p LEFT JOIN Share s ON s.project = p WHERE p.account = :account OR s.account = :account ORDER BY p.createdAt")
     public Page<Project> findAllByAccount(Account account, Pageable pageable);
-    @Query("SELECT DISTINCT p FROM Project p LEFT JOIN Share s ON s.project = p WHERE p.account = :account OR s.account = :account")
+    @Query("SELECT DISTINCT p FROM Project p LEFT JOIN Share s ON s.project = p WHERE p.account = :account OR s.account = :account ORDER BY p.createdAt")
     public List<Project> findAllByAccount(Account account);
 
-    @Query("SELECT p FROM Project p WHERE p.account.id = :id AND p.account.parent.id = :parentId")
+    @Query("SELECT p FROM Project p WHERE p.account.id = :id AND p.account.parent.id = :parentId ORDER BY p.createdAt")
     public List<Project> findAllChildProjects(@Param("id") Long id, @Param("parentId") Long parentId);
 
 
