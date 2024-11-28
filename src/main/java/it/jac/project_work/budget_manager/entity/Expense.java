@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.util.Set;
 
 @Entity
 public class Expense {
@@ -44,9 +45,12 @@ public class Expense {
     @ManyToOne
     private Account account;
 
+    @OneToMany(mappedBy = "expense")
+    private Set<ExpenseSplit> expenseSplits;
+
     public Expense(){}
 
-    public Expense(long id, String name, Date date, Double amount, char frequency, String description, String image, Timestamp createdAt, Category category, Project project, Account account) {
+    public Expense(long id, String name, Date date, Double amount, char frequency, String description, String image, Timestamp createdAt, Category category, Project project, Account account, Set<ExpenseSplit> expenseSplits) {
         this.id = id;
         this.name = name;
         this.amount = amount;
@@ -58,11 +62,21 @@ public class Expense {
         this.project = project;
         this.account = account;
         this.date = date;
+        this.expenseSplits = expenseSplits;
+    }
+
+    public Set<ExpenseSplit> getExpenseSplits() {
+        return expenseSplits;
+    }
+
+    public void setExpenseSplits(Set<ExpenseSplit> expenseSplits) {
+        this.expenseSplits = expenseSplits;
     }
 
     public long getId() {
         return id;
     }
+
 
     public void setId(long id) {
         this.id = id;

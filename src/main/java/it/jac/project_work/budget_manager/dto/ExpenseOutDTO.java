@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ExpenseOutDTO {
     private Long id;
@@ -20,10 +21,12 @@ public class ExpenseOutDTO {
     private CategoryOutDTO category;
     private Long projectId;
     private LocalDate date;
+    private Long accountId;
+    private List<SimpleAccountOutDTO> participants;
 
     private ExpenseOutDTO(){}
 
-    private ExpenseOutDTO(Long id, String name, String description, Double amount, char frequency, LocalDateTime createdAt, String image, CategoryOutDTO category, Long projectId, LocalDate date) {
+    private ExpenseOutDTO(Long id, String name, String description, Double amount, char frequency, LocalDateTime createdAt, String image, CategoryOutDTO category,Long accountId,  Long projectId, LocalDate date, List<SimpleAccountOutDTO> participants) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -33,6 +36,8 @@ public class ExpenseOutDTO {
         this.image = image;
         this.category = category;
         this.projectId = projectId;
+        this.accountId = accountId;
+        this.participants = participants;
         this.date = date;
     }
 
@@ -46,6 +51,21 @@ public class ExpenseOutDTO {
         dto.setCreatedAt(entity.getCreatedAt().toLocalDateTime());
         dto.setImage(entity.getImage());
         dto.setDate(entity.getDate().toLocalDate());
+        dto.setAccountId(entity.getAccount().getId());
+        dto.setParticipants(List.of());
+
+        if(entity.getExpenseSplits() != null){
+            List<SimpleAccountOutDTO> splits = entity.getExpenseSplits()
+                    .stream().map(split -> new SimpleAccountOutDTO(
+                            split.getAccount().getName(),
+                            split.getAccount().getSurname(),
+                            split.getAccount().getEmail(),
+                            split.getAccount().getImage(),
+                            split.getAmount()
+                    )).collect(Collectors.toList());
+            dto.setParticipants(splits);
+        }
+
         if(entity.getCategory()!= null) {
             dto.setCategory(CategoryOutDTO.build(entity.getCategory()));
         }
@@ -55,7 +75,24 @@ public class ExpenseOutDTO {
             dto.setProjectId(null);
         }
 
+
         return dto;
+    }
+
+    public List<SimpleAccountOutDTO> getParticipants() {
+        return participants;
+    }
+
+    public void setParticipants(List<SimpleAccountOutDTO> participants) {
+        this.participants = participants;
+    }
+
+    public Long getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(Long accountId) {
+        this.accountId = accountId;
     }
 
     public LocalDate getDate() {
