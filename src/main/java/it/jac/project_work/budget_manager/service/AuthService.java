@@ -15,13 +15,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Timestamp;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class AuthService {
@@ -130,6 +128,31 @@ public class AuthService {
 
        return response;
     }
+
+    public Map<String, Boolean> validateToken(String authorizationHeader) {
+        Map<String, Boolean> response = new HashMap<>();
+
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            String token = authorizationHeader.substring(7);
+
+            try {
+                if (JwtUtil.validateToken(token)) {
+                    response.put("isValid", true);
+                } else {
+                    response.put("isValid", false);
+                }
+            } catch (Exception e) {
+                System.err.println("Errore nella validazione del token: " + e.getMessage());
+                response.put("isValid", false);
+            }
+        } else {
+            response.put("isValid", false);
+        }
+
+        return response;
+    }
+
+
 }
 
 

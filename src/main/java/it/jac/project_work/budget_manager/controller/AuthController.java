@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -39,6 +40,11 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponseDTO login(@RequestBody AuthInDTO dto){
         return this.authService.login(dto);
+    }
+
+    @GetMapping("/validate")
+    public Map<String, Boolean> validateToken(@RequestHeader("Authorization") String authHeader){
+        return this.authService.validateToken(authHeader);
     }
 
 
