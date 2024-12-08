@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authorization.AuthenticatedReactiveAuthorizationManager;
 import org.springframework.security.config.annotation.web.oauth2.client.OAuth2ClientSecurityMarker;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -180,6 +181,12 @@ public class AccountController {
         String userEmail = authentication.getName();
         return this.incomeService.findAllChildIncomes(userEmail, id, limit);
     }
+    @GetMapping("/me/parent/{id}/projects/{projectId}")
+    public ProjectOutDTO getChildProjectById(@PathVariable("id")Long id, @PathVariable("projectId")Long projectId){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+        return this.projectService.getChildProjectById(userEmail, projectId, id);
+    }
     @GetMapping("/me/parent/{id}/projects")
     public List<ProjectOutDTO> allChildProjects(@PathVariable("id")Long id){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -299,6 +306,34 @@ public class AccountController {
 
     }
 
+    @GetMapping("/me/friends")
+    public List<SharedFriendsDTO> allFriends(){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+        return this.accountService.allFriends(userEmail);
+    }
+
+    @DeleteMapping("/me")
+    public void deleteAccount(){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+        this.accountService.deleteAccount(userEmail);
+    }
+
+    @DeleteMapping("/me/projects/{id}")
+    public void deleteProject(@PathVariable("id")Long id){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+        this.projectService.deleteProject(userEmail, id);
+    }
+
+    @PatchMapping("/me/projects/{id}")
+    public ProjectOutDTO updateProject(@RequestBody ProjectInDTO dto,@PathVariable("id") Long projectId){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+
+        return this.projectService.updateProject(userEmail, projectId, dto);
+    }
 
 
 }

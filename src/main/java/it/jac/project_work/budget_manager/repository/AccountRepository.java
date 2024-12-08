@@ -11,7 +11,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AccountRepository extends JpaRepository<Account, Long> {
+    @Query("SELECT a FROM Account a WHERE a.email = :email AND a.disabled = 0")
     Optional<Account> findByEmail(String email);
+
+    @Query("SELECT a FROM Account a WHERE a.id = :id")
+    Optional<Account> findById(Long id);
 
     @Query("SELECT SUM(i.amount) FROM Income i WHERE i.account.id = :id AND i.date BETWEEN :startDate AND :endDate")
     Double findMonthlyIncome(@Param("id") Long id, @Param("startDate") LocalDate startDate, @Param("endDate")LocalDate endDate);
