@@ -10,10 +10,12 @@ import org.springframework.data.repository.query.Param;
 
 import org.springframework.data.domain.Pageable;
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 public interface IncomeRepository extends JpaRepository<Income, Long> {
-    List<Income> findByAccountAndDateGreaterThanEqualOrderByDateDesc(Account account, Date date);
+    @Query("SELECT i FROM Income i WHERE i.account = :account AND i.date BETWEEN :startDate AND :endDate ORDER BY i.date")
+    List<Income> findByAccountAndDateGreaterThanEqualOrderByDateDesc(Account account, LocalDate startDate, LocalDate endDate);
     List<Income> findByAccount(Account account);
 
     @Query("SELECT i FROM Income i WHERE i.account.id = :id")

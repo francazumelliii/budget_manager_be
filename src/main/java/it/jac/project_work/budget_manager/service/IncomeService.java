@@ -52,8 +52,9 @@ public class IncomeService {
         java.util.Date utilDate = calendar.getTime();
 
         Date sqlDate = new Date(utilDate.getTime());
-        System.out.println(sqlDate);
-        list = this.incomeRepository.findByAccountAndDateGreaterThanEqualOrderByDateDesc(account,sqlDate);
+        LocalDate startDate = sqlDate.toLocalDate().withDayOfMonth(1);
+        LocalDate endDate = startDate.withDayOfMonth(sqlDate.toLocalDate().lengthOfMonth());
+        list = this.incomeRepository.findByAccountAndDateGreaterThanEqualOrderByDateDesc(account,startDate, endDate);
         if(limit == null || limit > list.size()){
             return list.stream().map(income -> IncomeOutDTO.build(income)).collect(Collectors.toList());
         }
@@ -123,8 +124,10 @@ public class IncomeService {
         if(dto.getAmount() != null && dto.getAmount() > 0){
             income.setAmount(dto.getAmount());
         }
-        if(dto.getFrequency() != null){
+        if(dto.getFrequency() != null && !dto.getFrequency().isBlank()){
             income.setFrequency(dto.getFrequency().charAt(0));
+        }else{
+            income.setFrequency('S');
         }
         if(dto.getDate() != null ){
             income.setDate(dto.getDate());
