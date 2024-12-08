@@ -13,8 +13,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.awt.image.RescaleOp;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -260,6 +262,60 @@ public class ProjectService {
 
 
         return ProjectOutDTO.build(project);
+    }
+
+    public void deleteProject(String userEmail, Long projectId){
+        Account account = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+        Optional<Project> project = this.projectRepository.findById(projectId);
+        if(!project.isPresent()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project Entity not found");
+
+        project = account.getProjects().stream().filter(p-> p.getId() == projectId).findAny();
+        if(!project.isPresent()) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot delete other user's project");
+
+        this.projectRepository.delete(project.get());
+
+    }
+
+    public ProjectOutDTO updateProject(String userEmail, Long projectId, ProjectInDTO dto){
+        if(dto == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameters: dto");
+        Account account = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+        Optional<Project> project = this.projectRepository.findById(projectId);
+        if(!project.isPresent()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project entity not found");
+
+        project = account.getProjects().stream().filter(pr -> pr.getId() == projectId).findAny();
+        if(!project.isPresent()) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot update other user's project");
+
+        if(dto.getName() != null) project.get().setName(dto.getName());
+        if(dto.getDescription() != null)project.get().setDescription(dto.getDescription());
+        if(dto.getGoalAmount() >= 0) project.get().setGoalAmount(dto.getGoalAmount());
+        if(dto.getImage() != null) project.get().setImage(dto.getImage());
+
+        return ProjectOutDTO.build(this.projectRepository.save(project.get()));
+
+    }
+
+    public ProjectOutDTO getChildProjectById(String userEmail, Long projectId, Long childId) {
+
+        Account parent = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+
+        if (projectId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameter: projectId");
+        }
+        if (childId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameter: childId");
+        }
+
+        Account child = parent.getChildren().stream()
+                .filter(c -> c.getId() == childId )
+                .findAny()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot see other user's children project"));
+
+        Optional<Project> project = this.projectRepository.findAllChildProjects(child.getId(), parent.getId()).stream().filter(p -> Objects.equals(p.getId(), projectId)).findAny();
+        if(!project.isPresent()) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot see other user's project");
+        return ProjectOutDTO.build(project.get());
     }
 
 }
