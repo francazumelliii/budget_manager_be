@@ -302,8 +302,10 @@ public class ExpenseService {
         if(dto.getAmount() != null && dto.getAmount() > 0){
             entity.get().setAmount(dto.getAmount());
         }
-        if(dto.getFrequency() != null){
+        if(dto.getFrequency() != null && !dto.getFrequency().isBlank()){
             entity.get().setFrequency(dto.getFrequency().charAt(0));
+        }else{
+            entity.get().setFrequency('S');
         }
         if(dto.getDate() != null ){
             entity.get().setDate(dto.getDate());

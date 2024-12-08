@@ -28,10 +28,10 @@ public interface ExpenseRepository extends JpaRepository<Expense,Long> {
     @Query("SELECT e FROM Expense e WHERE e.account.parent.id = :parentId AND e.account.id = :id ORDER BY e.date")
     List<Expense> findAllChildExpenses(@Param("id") Long id, @Param("parentId") Long parentId);
 
-    @Query("SELECT e FROM Expense e WHERE e.account.id = :id ORDER BY e.date")
+    @Query("SELECT e FROM Expense e WHERE e.account.id = :id ")
     Page<Expense> findAllWithPagination(@Param("id") Long id, Pageable pageable);
 
-    @Query("SELECT e FROM Expense e WHERE e.account.id = :id ORDER BY e.date")
+    @Query("SELECT e FROM Expense e WHERE e.account.id = :id ")
     Page<Expense> findAllChildWithPagination(@Param("id") Long id, Pageable pageable);
 
     List<Expense> findAllByFrequencyNot(char frequency);
