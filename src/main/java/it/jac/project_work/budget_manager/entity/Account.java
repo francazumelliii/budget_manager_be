@@ -33,6 +33,8 @@ public class Account {
 
     @Column(name = "image")
     private String image;
+    @Column(name = "disabled")
+    private Integer disabled;
 
     @Column(name = "created_at")
     private Timestamp createdAt;
@@ -81,11 +83,12 @@ public class Account {
 
     }
 
-    public Account(long id, String name, String surname, String defaultCurrency, String email, String password, Date bithdate, String image, Timestamp createdAt, Account parent, Set<Account> children, Set<Expense> expenses, Set<Income> incomes, Set<Share> shares, String menuList, Set<Project> projects, Set<ExpenseSplit> expenseSplits) {
+    public Account(long id, String name, String surname, String defaultCurrency, String email, String password, Date bithdate, String image, Timestamp createdAt, Account parent, Set<Account> children, Set<Expense> expenses, Integer disabled, Set<Income> incomes, Set<Share> shares, String menuList, Set<Project> projects, Set<ExpenseSplit> expenseSplits) {
         this.id = id;
         this.name = name;
         this.surname = surname;
         this.email = email;
+        this.disabled = disabled;
         this.password = password;
         this.bithdate = bithdate;
         this.image = image;
@@ -124,6 +127,14 @@ public class Account {
 
     public String getDefaultCurrency() {
         return defaultCurrency;
+    }
+
+    public Integer getDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(Integer disabled) {
+        this.disabled = disabled;
     }
 
     public void setDefaultCurrency(String defaultCurrency) {
