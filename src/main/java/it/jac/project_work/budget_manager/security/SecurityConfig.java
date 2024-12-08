@@ -2,6 +2,7 @@ package it.jac.project_work.budget_manager.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -21,7 +22,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/token", "/api/v1/auth/signup").permitAll()
+                                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/token", "/api/v1/auth/signup","/api/v1/auth/validate").permitAll()
+                                .requestMatchers(HttpMethod.DELETE, "/me/account").authenticated()
                                 .requestMatchers("/api/v1/account/**").hasAnyAuthority("USER")
                                 .requestMatchers("/api/v1/account/me/parent/**").hasAnyAuthority( "PARENT")
                                 .anyRequest().authenticated()
