@@ -26,16 +26,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String username = JwtUtil.extractUsername(token);
                 List<String> roles = JwtUtil.extractRoles(token);
 
-                // Converti i ruoli in GrantedAuthority
                 List<SimpleGrantedAuthority> authorities = roles.stream()
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
-                // Crea l'oggetto Authentication con gli authority corretti
                 Authentication auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         }
-        filterChain.doFilter(request, response); // Passa il controllo al prossimo filtro
+        filterChain.doFilter(request, response);
     }
 }
