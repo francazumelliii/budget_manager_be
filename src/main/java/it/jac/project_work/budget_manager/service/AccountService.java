@@ -9,8 +9,12 @@ import java.math.RoundingMode;
 import java.time.Period;
 
 import it.jac.project_work.budget_manager.entity.Account;
+import it.jac.project_work.budget_manager.entity.Project;
 import it.jac.project_work.budget_manager.entity.Role;
+import it.jac.project_work.budget_manager.entity.Share;
 import it.jac.project_work.budget_manager.repository.AccountRepository;
+import it.jac.project_work.budget_manager.repository.ProjectRepository;
+import it.jac.project_work.budget_manager.repository.ShareRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpOutputMessage;
@@ -23,15 +27,22 @@ import org.springframework.web.server.ResponseStatusException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class AccountService {
     @Autowired
     private final AccountRepository accountRepository;
+    @Autowired
+    public final ShareRepository shareRepository;
+    @Autowired
+    public final ProjectRepository projectRepository;
     PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
     @Autowired
-    public AccountService(AccountRepository accountRepository){
+    public AccountService(AccountRepository accountRepository, ShareRepository shareRepository, ProjectRepository projectRepository){
+        this.projectRepository = projectRepository;
         this.accountRepository = accountRepository;
+        this.shareRepository = shareRepository;
     }
 
     public AccountOutDTO saveChild(AccountInDTO dto, String userEmail){
@@ -148,6 +159,35 @@ public class AccountService {
         }
         return AccountOutDTO.build(this.accountRepository.save(account));
     }
+
+    public List<SharedFriendsDTO> allFriends(String userEmail){
+        Account account = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity  not found"));
+        List<Share> shares = this.shareRepository.findAllByAccount(account);
+        return shares.stream().map(shared -> SharedFriendsDTO.build(shared)).collect(Collectors.toList());
+
+    }
+
+    public void deleteAccount(String userEmail) {
+        Account account = this.accountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account entity not found"));
+        account.setDisabled(1);
+        this.accountRepository.save(account);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     private Double round(Double value, int places) {
